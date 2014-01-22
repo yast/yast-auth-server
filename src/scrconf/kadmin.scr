@@ -1,0 +1,13 @@
+/**
+ * File:
+ *   kadmin.scr
+ * Summary:
+ *   SCR Agent for kadmin commands
+ *
+ * $Id: $
+ *
+ * Execute kadmin commands.
+ */
+.kadmin
+`ag_kadmin(`INIT ())
+

@@ -1,0 +1,568 @@
+#! /usr/bin/perl -w
+
+###############################################################
+# Copyright 2007, Novell, Inc.  All rights reserved.
+#
+# $Id: $
+###############################################################
+
+package ag_kerberos;
+
+use strict;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+use Data::Dumper;
+
+
+my $file = "";
+
+#
+# key
+# value
+# type  (COMMENT, SECTION, VALUE, EMPTY)
+
+my $config = undef;
+
+sub init
+{
+    my $class = shift;
+    
+    y2debug("ag_kerberos: init called");
+    
+    $config = [];
+    
+    open(IN, "< $file") or do 
+    {
+        $class->SetError(summary=> "Cannot open $file: $!",
+                         code => "SCR_INIT_ERR");
+        return 0;
+    };
+    
+    my @kf = <IN>;
+    close IN;
+    
+    my @refs = ($config);
+    
+    my $confRef = $refs[$#refs];
+    
+    
+    foreach my $line (@kf)
+    {
+        my $node = {};
+        chomp $line;
+        
+        if( $line =~ /^\s*#(.*)$/)
+        {
+            y2debug("found COMMENT: $line");
+            
+            $node->{key} = undef;
+            $node->{value} = $1;
+            $node->{type} = "COMMENT";
+            
+            push @{$confRef}, $node;
+        }
+        elsif( $line =~ /^(\s*)$/)
+        {
+            y2debug("found EMPTY: $line");
+                        
+            $node->{key} = undef;
+            $node->{value} = $1;
+            $node->{type} = "EMPTY";
+            
+            push @{$confRef}, $node;
+        }
+        elsif( $line =~ /^\s*\[(.*)\]\s*$/)
+        {
+            if($#refs > 0)
+            {
+                y2debug("close section");
+
+                pop @refs;
+                $confRef = $refs[$#refs];
+            }
+            
+            y2debug("found SECTION: $line");
+            
+            $node->{type} = "SECTION";
+            $node->{key} = $1;
+            $node->{value} = [];
+            
+            push @{$confRef}, $node;
+            $confRef = $node->{value};
+            push @refs, $node->{value};
+        }
+        elsif( $line =~ /^\s*(\S*)\s*=\s*{\s*$/)
+        {
+            y2debug("found SECTION: $line");
+            
+            $node->{type} = "SECTION";
+            $node->{key} = $1;
+            $node->{value} = [];
+            
+            push @{$confRef}, $node;
+            $confRef = $node->{value};
+            push @refs, $node->{value};
+        }
+        elsif( $line =~ /^\s*}\s*$/)
+        {
+            # do not write close tag to in-memory config
+            # we add it again during write
+            
+            if($#refs > 0)
+            {
+                y2debug("close section");
+                pop @refs;
+                $confRef = $refs[$#refs];
+            }
+        }
+        elsif( $line =~ /^\s*(\S*)\s*=\s*(.+)\s*$/)
+        {
+            
+            $node->{type} = "VALUE";
+            $node->{key} = $1;
+            $node->{value} = $2;
+            
+            push @{$confRef}, $node;
+        }
+    }
+    
+    y2debug(Data::Dumper->Dump([$config]));
+    
+    return 1;
+}
+
+sub check_initialized ()
+{
+    my $class = shift;
+    if (not defined $config)
+    {
+        $class->SetError(summary => "Agent not initialized yet",
+                         code => "SCR_INIT_ERR");
+        return 0;
+    }
+    return 1;
+}
+
+sub OtherCommand 
+{
+    my $class = shift;
+    my ($symbol, $config, @rest) = @_;
+    
+    if ($symbol ne "INIT") 
+    {
+        return $class->SetError(summary=> "The first command must be the configuration.(Seen '$_')",
+                                code => "SCR_INIT_ERR");
+    }
+    else
+    {
+        $file = $config->{"file"};
+        $class->init() || return undef;
+    }
+    
+    return 1;
+}
+
+
+sub Dir 
+{
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'",
+                                                  code => "PARAM_CHECK_FAILED");
+    my $ret = [];
+    
+    $class->check_initialized || return undef;
+
+    y2debug("Path: ".$path);
+    
+    my ($type, $dirs) = $class->splitPath($path);
+
+    my $node = $class->getNode($config, $dirs);
+    if(!defined $node)
+    {
+        return undef;
+    }
+    if($node->[0]->{type} eq "SECTION" && $node->[0]->{key} eq $dirs->[$#{$dirs}])
+    {
+        # sections cannnot appear multiple times
+        foreach my $n (@{$node->[0]->{value}})
+        {
+            if($n->{type} eq uc($type))
+            {
+                push @{$ret}, $n->{key};
+            }
+        }
+    }
+    
+    return $ret;
+}
+
+
+sub Read 
+{
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'",
+                                                  code => "PARAM_CHECK_FAILED");
+    my $ret = undef;
+
+    $class->check_initialized || return undef;
+
+    y2debug("Path: ".$path);
+    
+    my ($type, $dirs) = $class->splitPath($path);
+
+    my $node = $class->getNode($config, $dirs);
+    if(!defined $node)
+    {
+        return undef;
+    }
+    foreach my $sn (@$node)
+    {
+        if($sn->{type} eq "VALUE" && $sn->{key} eq $dirs->[$#{$dirs}])
+        {
+            push @{$ret}, $sn->{value};
+        }
+        else
+        {
+            return $class->SetError(summary => "Path '$path' does not contain a value.",
+                                    code => "SCR_WRONG_PATH");
+        }
+    }
+
+    return $ret;
+}
+
+sub Write
+{
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'",
+                                                  code => "PARAM_CHECK_FAILED");
+    my $value  = shift || undef;
+
+    my $section = $config;
+    my $node = [];
+    
+    $class->check_initialized || return undef;
+    
+    y2debug("Write called with path: ".$path." and value".Data::Dumper->Dump([$value]));
+    
+    if(!defined $value && $path eq ".")
+    {
+        return $class->writeconfig();
+    }
+    elsif(!defined $value)
+    {
+        $value = [];
+    }
+    
+    my ($type, $dirs) = $class->splitPath($path);
+    
+    for(my $i = 0; $i < @$dirs; $i++)
+    {
+        my $c = $dirs->[$i];
+        
+        y2debug("component: $c");
+        
+        next if($c eq "");
+        
+        #$node = $class->nextNode($section, $c);
+        my $idx = $class->nextNodeIdx($section, $c);
+        if(!defined $idx)
+        {
+            if( ($i + 1) < @$dirs)
+            {
+                # create a section
+                y2debug("create section $c ");
+                
+                my $n = {};
+                $n->{type} = "SECTION";
+                $n->{key} = $c;
+                $n->{value} = [];
+                push @{$section}, $n;
+                $section = $section->[$#{$section}]->{value};
+            }
+            else
+            {
+                # finished; create the value
+                y2debug("create value $c ");
+                
+                foreach my $v (@{$value})
+                {
+                    my $n = {};
+                    $n->{type} = "VALUE";
+                    $n->{key} = $c;
+                    $n->{value} = $v;
+                    push @{$section}, $n;
+                }
+            }
+        }
+        elsif(@$idx == 1 && $section->[$idx->[0]]->{type} eq "SECTION" && ($i + 1) < @$dirs)
+        {
+            y2debug("walk into section ".$section->[$idx->[0]]->{key});
+            $section = $section->[$idx->[0]]->{value};
+        }
+        elsif(($i + 1) >= @$dirs)
+        {
+            # end of path - do something
+            
+            my $j = 0;
+            foreach my $i (reverse @{$idx})
+            {
+                y2debug("Delete index($i): ".Data::Dumper->Dump([$section->[$i]]));
+                splice( @{$section}, $i, 1 );
+                $j = $i;
+            }
+            y2debug("Index: $j");
+            foreach my $v (@{$value})
+            {
+                my $n = {};
+                $n->{type} = "VALUE";
+                $n->{key} = $c;
+                $n->{value} = $v;
+                splice( @{$section}, $j, 0, $n);
+                y2debug("Add index($j): ".Data::Dumper->Dump([$n]));
+                $j++;
+            }
+        }
+        else
+        {
+            y2milestone("Error");
+            return 0;
+        }
+    }
+    
+    y2debug("DONE: ".Data::Dumper->Dump([$config]));
+
+    return 1;
+}
+
+
+sub writeconfig
+{
+    my $class = shift;
+    
+    my @kf = ();
+    
+    parseNode($config, \@kf, -1);
+    
+    open(OUT, "> $file") or do 
+    {
+        $class->SetError(summary=> "Cannot open $file: $!",
+                         code => "SCR_WRITE_FAILED");
+        return 0;
+    };
+    
+    print OUT @kf;
+    close OUT;
+
+    return 1;
+}
+
+sub splitPath
+{
+    my $class = shift;
+    my $path  = shift;
+
+    my @dirs = ();
+    my $element = "";
+
+    my $quoted = 0;
+
+    my $type = "";
+    
+    for(my $o = 0; $o < length($path);$o++)
+    {
+        my $char = substr($path, $o, 1);
+        if($char eq '.')
+        {
+            if(!$quoted)
+            {
+                if(uc($element) eq "SECTION" || uc($element) eq "VALUE")
+                {
+                    $type = uc($element);
+                    $element = "";
+                }
+                else
+                {
+                    push @dirs, $element;
+                    $element = "";
+                }
+            }
+            else
+            {
+                $element .= $char;
+            }
+        }
+        elsif($char eq "\"")
+        {
+            $quoted = !$quoted;
+        }
+        else
+        {
+            $element .= $char;
+        }
+    }
+    if($element ne "")
+    {
+        if(uc($element) eq "SECTION" || uc($element) eq "VALUE")
+        {
+            $type = uc($element);
+        }
+        else
+        {
+            push @dirs, $element;
+        }
+    }
+    
+    y2debug(Data::Dumper->Dump([@dirs]));
+
+    return ($type, \@dirs);
+}
+
+sub getNode
+{
+    my $class     = shift;
+    my $sect      = shift;
+    my $splitpath = shift;
+
+    my $section = $sect;
+    my $node    = [];
+    
+    # this is for the root-node
+    $node->[0]->{type}  = "SECTION";
+    $node->[0]->{key}   = "";
+    $node->[0]->{value} = $section;
+    
+
+    foreach my $c (@{$splitpath})
+    {
+        y2debug("component: $c");
+
+        next if($c eq "");
+        
+        $node = $class->nextNode($section, $c);
+        if(!defined $node)
+        {
+            return $class->SetError(summary => "Node not found '$c'",
+                                    code => "SCR_WRONG_PATH");
+        }
+        if($node->[0]->{type} eq "SECTION")
+        {
+            # section cannot appear multiple times
+            $section = $node->[0]->{value};
+        }
+    }
+    return $node;
+}
+
+sub nextNode
+{
+    my $class = shift;
+    my $node = shift;
+    my $pat  = shift;
+    
+    my $match = [];
+
+    foreach my $c (@{$node})
+    {
+        if(defined $c->{key} && $c->{key} eq $pat)
+        {
+            push @{$match}, $c;
+        }
+    }
+    if(@$match == 0)
+    {
+        return undef;
+    }
+    else
+    {
+        return $match;
+    }
+}
+
+sub nextNodeIdx
+{
+    my $class = shift;
+    my $node  = shift;
+    my $pat   = shift;
+    
+    my $match = [];
+    my $idx;
+    
+    for($idx = 0; $idx < @{$node}; $idx++)
+    {
+        my $c = $node->[$idx];
+        if(defined $c->{key} && $c->{key} eq $pat)
+        {
+            push @{$match}, $idx;
+        }
+    }
+    if(@$match == 0)
+    {
+        return undef;
+    }
+    else
+    {
+        return $match;
+    }
+}
+
+sub parseNode
+{
+    my $nodeArray = shift;
+    my $out       = shift;
+    my $depth     = shift;
+    
+    $depth++;
+
+    my $indent = "";
+    for(my $i = 0; $i < $depth; $i++)
+    {
+        $indent .= "\t";
+    }
+    
+
+    foreach my $node (@{$nodeArray})
+    {
+        y2debug("Depth: $depth   Parse node: ".Data::Dumper->Dump([$node]));
+
+        if($node->{type} eq "EMPTY")
+        {
+            push @{$out}, $node->{value}."\n";
+        }
+        elsif($node->{type} eq "COMMENT")
+        {
+            push @{$out}, "#".$node->{value}."\n";
+        }
+        elsif($node->{type} eq "VALUE")
+        {
+            push @{$out}, $indent."$node->{key} = $node->{value}\n";
+        }
+        elsif($node->{type} eq "SECTION")
+        {
+            if($depth <= 0)
+            {
+                push @{$out}, $indent."[".$node->{key}."]\n";
+                parseNode($node->{value}, $out, $depth);
+            }
+            else
+            {
+                push @{$out}, $indent.$node->{key}." = {\n";
+                parseNode($node->{value}, $out, $depth);
+
+                # close the section
+                push @{$out}, $indent."}\n";
+            }
+        }
+    }
+}
+
+package main;
+ag_kerberos->Run;
+
+
+
+
+
+
