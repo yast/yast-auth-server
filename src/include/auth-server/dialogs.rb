@@ -179,7 +179,7 @@ module Yast
         else
           Builtins.y2error(
             Builtins.sformat(
-              "LdapServer Module: illegal handler '%1' for item '%2'",
+              "AuthServer Module: illegal handler '%1' for item '%2'",
               handler,
               item
             )
@@ -909,7 +909,7 @@ module Yast
               Report.Error(
                 Ops.add(
                   Ops.add(
-                    "LdapServer Module: illegal input handler for item '",
+                    "AuthServer Module: illegal input handler for item '",
                     @current_tree_item
                   ),
                   "'"

@@ -16,8 +16,6 @@ module Yast
       Yast.import "Label"
       Yast.import "Popup"
       Yast.import "Wizard"
-      #Yast.import "LdapServer"
-      #Yast.import "KerberosServer"
       Yast.import "AuthServer"
       Yast.import "Package"
       Yast.import "Service"
@@ -197,7 +195,7 @@ module Yast
     def DoMigration
       AuthServer.UseLdapiForConfig(true)
       if !AuthServer.MigrateSlapdConf
-        Builtins.y2milestone("LdapServer::MigrateSlapdConf failed")
+        Builtins.y2milestone("AuthServer::MigrateSlapdConf failed")
         DisplayError(AuthServer.ReadError)
         return :abort
       end
@@ -223,7 +221,7 @@ module Yast
         DisplayError(AuthServer.ReadError)
         return :abort
       end
-      #    ret = LdapServer::WritePPolicyObjects();
+      #    ret = AuthServer::WritePPolicyObjects();
       ret ? :next : :abort
     end
 

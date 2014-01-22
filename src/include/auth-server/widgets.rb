@@ -12,7 +12,6 @@ module Yast
       textdomain "auth-server"
       Yast.import "CWMFirewallInterfaces"
       Yast.import "Label"
-      Yast.import "Ldap"
       Yast.import "Popup"
       Yast.import "Wizard"
 

@@ -1,5 +1,5 @@
 #! /usr/bin/perl -w
-# File:		modules/LdapServer.pm
+# File:		modules/AuthServer.pm
 # Package:	Configuration of ldap-server
 # Summary:	LdapServer settings, input and output functions
 # Authors:	Ralf Haferkamp <rhafer@suse.de>, Andreas Bauer <abauer@suse.de>
@@ -747,24 +747,24 @@ sub initLDAP
             # local ldap server; use hostname and domain
             $ldapMap->{ldap_servers} = $self->ReadHostnameFQ(); # == ldap server IP address or name
         }
-         elsif(($uriParts->{scheme} eq "ldaps" || $uriParts->{scheme} eq "ldap") && $uriParts->{host} ne "")
-         {
-             # local ldap server; use hostname and domain
-             $ldapMap->{ldap_servers} = $uriParts->{host}; # == ldap server IP address or name
-             $ldapMap->{ldap_port} = $uriParts->{port};
-         }
-         else
-         {
-             y2error("Wrong LDAP URI: scheme ".$uriParts->{scheme}." not allowed");
-             $self->SetError(_("Invalid LDAP URI scheme."), $uriParts->{scheme}." is not allowed.");
-             return 0;
-         }
+        elsif(($uriParts->{scheme} eq "ldaps" || $uriParts->{scheme} eq "ldap") && $uriParts->{host} ne "")
+        {
+            # local ldap server; use hostname and domain
+            $ldapMap->{ldap_servers} = $uriParts->{host}; # == ldap server IP address or name
+            $ldapMap->{ldap_port} = $uriParts->{port};
+        }
+        else
+        {
+            y2error("Wrong LDAP URI: scheme ".$uriParts->{scheme}." not allowed");
+            $self->SetError(_("Invalid LDAP URI scheme."), $uriParts->{scheme}." is not allowed.");
+            return 0;
+        }
 
-         if(!exists $ldapMap->{ldap_port} || !defined $ldapMap->{ldap_port} || $ldapMap->{ldap_port} eq "")
-         {
-             # ldaps on 636 is not supported by the ldap agent
-             $ldapMap->{ldap_port} = 389;
-         }
+        if(!exists $ldapMap->{ldap_port} || !defined $ldapMap->{ldap_port} || $ldapMap->{ldap_port} eq "")
+        {
+            # ldaps on 636 is not supported by the ldap agent
+            $ldapMap->{ldap_port} = 389;
+        }
     }
 
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_servers'},

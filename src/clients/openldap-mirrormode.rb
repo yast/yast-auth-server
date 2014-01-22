@@ -17,6 +17,8 @@ module Yast
 
       textdomain "auth-server"
 
+      Yast.import "AuthServer"
+
       # The main ()
       Builtins.y2milestone("----------------------------------------")
       Builtins.y2milestone("OpenLDAP MirrorMode module started")
@@ -35,8 +37,8 @@ module Yast
           "Configuration of OpenLDAP MirrorMode replication"
         ),
         "guihandler" => fun_ref(method(:MirrorModeSequence), "any ()"),
-        "initialize" => fun_ref(LdapServer.method(:Read), "boolean ()"),
-        "finish"     => fun_ref(LdapServer.method(:Write), "boolean ()")
+        "initialize" => fun_ref(AuthServer.method(:Read), "boolean ()"),
+        "finish"     => fun_ref(AuthServer.method(:Write), "boolean ()")
       }
 
       # main ui function
