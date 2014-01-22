@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-auth-server
 #
-# Copyright (c) 2013 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2014 SUSE LINUX Products GmbH, Nuernberg, Germany.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-server
-Version:        3.2
+Version:        3.1.2
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -36,6 +36,12 @@ Requires:       yast2-users >= 2.22.3
 # Wizard::SetDesktopTitleAndIcon
 Requires:       yast2 >= 2.21.22
 Requires:       yast2-ruby-bindings >= 1.0.0
+
+# Obsolete following packages
+Obsoletes:      yast2-kerberos-server < 3.1.2
+Obsoletes:      yast2-ldap-server < 3.1.2
+Provides:       yast2-kerberos-server = %{version}
+Provides:       yast2-ldap-server = %{version}
 
 Summary:	YaST2 - Authentication Server Configuration
 
