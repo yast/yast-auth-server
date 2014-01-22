@@ -1,0 +1,17 @@
+/**
+ * File:
+ *   krb5_conf.scr
+ * Summary:
+ *   SCR Agent for reading/writing krb5.conf using the ini-agent
+ *
+ * $Id: $
+ *
+ * Read/Sets the values defined in <tt>krb5.conf</tt>.
+ */
+.krb5_conf
+`ag_kerberos (
+  `INIT ($[
+    "file"      : "/etc/krb5.conf"
+  ])
+)
+

@@ -1,0 +1,31 @@
+/**
+ * File:
+ *   cfg_openldap.scr
+ * Summary:
+ *   SCR Agent for reading/writing /etc/sysconfig/openldap
+ *   using the ini-agent
+ * Access:
+ *   read/write
+ * Authors:
+ *   Carsten Hoeger <choeger@suse.de>
+ * See:
+ *   yast2-agent-ini/ini.html
+ *   libscr
+ * Example:
+ *   Read(.sysconfig.openldap.SOMETHING)
+ *   ("no")
+ **
+ *   Write(.sysconfig.openldap.SOMETHING, "yes")
+ *   (true)
+ *
+ * $Id$
+ *
+ * Read/Sets the values defined in <tt>/etc/sysconfig/openldap</tt>
+ * (formerly <tt>/etc/rc.config.d/openldap.rc.config</tt>)
+ * in an easy manner.
+ */
+.sysconfig.openldap
+
+`ag_ini(
+  `SysConfigFile("/etc/sysconfig/openldap")
+)
