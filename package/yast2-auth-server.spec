@@ -32,6 +32,7 @@ Requires:	acl net-tools perl perl-Digest-SHA1 perl-gettext perl-X500-DN yast2 ya
 
 # users/ldap_dialogs.ycp
 Requires:       yast2-users >= 2.22.3
+Requires:       yast2-ldap >= 3.1.0
 
 # Wizard::SetDesktopTitleAndIcon
 Requires:       yast2 >= 2.21.22

@@ -162,6 +162,9 @@ module Yast
     def cb_read_daemon
       Builtins.y2milestone("calling read handler for item \"daemon\"")
       enabled = AuthServer.ReadServiceEnabled
+      kerberos = AuthServer.ReadKerberosEnabled
+      Builtins.y2milestone("openldap is: '%1'", enabled)
+      Builtins.y2milestone("kerberos is: '%1'", kerberos)
       CWMFirewallInterfaces.OpenFirewallInit(@fw_widget, "")
       if enabled
         UI.ChangeWidget(:rb_service_enable, :CurrentButton, :rb_yes)
@@ -172,6 +175,11 @@ module Yast
         UI.ChangeWidget(:cb_register_slp, :Value, true)
       else
         UI.ChangeWidget(:cb_register_slp, :Value, false)
+      end
+      if kerberos
+        UI.ChangeWidget(:rb_kerberos_enable, :CurrentButton, :rb_kerberos_yes)
+      else
+        UI.ChangeWidget(:rb_kerberos_enable, :CurrentButton, :rb_kerberos_no)
       end
       if AuthServer.ReadProtocolListenerEnabled("ldap")
         UI.ChangeWidget(:cb_interface_ldap, :Value, true)
@@ -197,6 +205,15 @@ module Yast
         AuthServer.WriteServiceEnabled(true)
       else
         AuthServer.WriteServiceEnabled(false)
+      end
+
+      kerberosEnabled = Convert.to_symbol(
+        UI.QueryWidget(Id(:rb_kerberos_enable), :CurrentButton)
+      )
+      if kerberosEnabled == :rb_kerberos_yes
+        AuthServer.WriteKerberosEnabled(true)
+      else
+        AuthServer.WriteKerberosEnabled(false)
       end
 
       AuthServer.WriteSLPEnabled(

@@ -586,7 +586,7 @@ module Yast
               UI.SetFocus(Id(:pw1))
               next
             end
-            AuthServer.AddKerberosEntries
+            #AuthServer.AddKerberosEntries
           end
 
           break
@@ -697,7 +697,7 @@ module Yast
         ret = Convert.to_symbol(UI.UserInput)
 
         if ret == :abort || ret == :cancel
-          if ReallyAbort()
+          if Popup.ReallyAbort(true)
             break
           else
             next

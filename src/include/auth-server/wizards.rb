@@ -166,6 +166,11 @@ module Yast
 	  :next     => "summary",
           :advanced => "kerberos_adv"
 	},
+        "kerberos_adv"       => {
+          :abort => :abort,
+          :next  => "kerberos",
+          :back  => "kerberos"
+	},
         "mastersetup"        => { :next => "summary", :abort => :abort },
         "summary"            => {
           :next     => "write",

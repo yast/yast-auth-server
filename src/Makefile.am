@@ -1,8 +1,6 @@
 # Sources for ldap-server
 
 module_DATA = \
-  modules/Ldap.rb \
-  modules/LdapPopup.rb \
   modules/LdapDatabase.rb \
   modules/AuthServer.pm
 
