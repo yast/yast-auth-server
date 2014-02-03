@@ -1903,7 +1903,7 @@ sub Import {
         $usingDefaults = 1;
         $overwriteConfig = 0;
         $self->WriteServiceEnabled( 0 );
-        y2milestone("Wrong/empty ldap-server profile");
+        y2milestone("Wrong/empty auth-server profile");
         return 0;
     }
 

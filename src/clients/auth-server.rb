@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # File:	clients/auth-server.rb
-# Package:	Configuration of ldap-server
+# Package:	Configuration of auth-server
 # Summary:	Main file
 # Authors:	Andreas Bauer <abauer@suse.de>
 #

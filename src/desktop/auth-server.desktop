@@ -13,10 +13,10 @@ X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-AutoInst=all
 X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
-X-SuSE-YaST-AutoInstResource=ldap-server
+X-SuSE-YaST-AutoInstResource=auth-server
 X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstRequires=lan,ca_mgm
-X-SuSE-YaST-AutoInstSchema=ldap-server.rnc
+X-SuSE-YaST-AutoInstSchema=auth-server.rnc
 
 Icon=yast-ldap-server
 Exec=xdg-su -c "/sbin/yast2 auth-server"
