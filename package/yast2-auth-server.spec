@@ -36,6 +36,7 @@ Requires:       yast2-users >= 2.22.3
 # Wizard::SetDesktopTitleAndIcon
 Requires:       yast2 >= 2.21.22
 Requires:       yast2-ruby-bindings >= 1.0.0
+Requires:       yast2-ldap >= 3.1.2
 
 # Obsolete following packages
 Obsoletes:      yast2-kerberos-server < 3.1.2
