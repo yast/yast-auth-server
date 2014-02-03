@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jan 31 23:44:25 UTC 2014 - varkoly@suse.com
+
+- Fix the requirement yast2-ldap-client -> yast2-ldap 
+
+-------------------------------------------------------------------
 Wed Jan 22 11:39:48 UTC 2014 - ckornacker@suse.com
 
 - rename yast2-ldap-server to yast2-auth-server
