@@ -176,11 +176,10 @@ module Yast
       else
         UI.ChangeWidget(:cb_register_slp, :Value, false)
       end
-      if kerberos
-        UI.ChangeWidget(:rb_kerberos_enable, :CurrentButton, :rb_kerberos_yes)
-      else
-        UI.ChangeWidget(:rb_kerberos_enable, :CurrentButton, :rb_kerberos_no)
-      end
+
+      krb_button = kerberos ? :rb_kerberos_yes : :rb_kerberos_no
+      UI.ChangeWidget(:rb_kerberos_enable, :CurrentButton, krb_button)
+
       if AuthServer.ReadProtocolListenerEnabled("ldap")
         UI.ChangeWidget(:cb_interface_ldap, :Value, true)
       else
@@ -207,14 +206,8 @@ module Yast
         AuthServer.WriteServiceEnabled(false)
       end
 
-      kerberosEnabled = Convert.to_symbol(
-        UI.QueryWidget(Id(:rb_kerberos_enable), :CurrentButton)
-      )
-      if kerberosEnabled == :rb_kerberos_yes
-        AuthServer.WriteKerberosEnabled(true)
-      else
-        AuthServer.WriteKerberosEnabled(false)
-      end
+      kerberosEnabled = UI.QueryWidget(Id(:rb_kerberos_enable), :CurrentButton)
+      AuthServer.WriteKerberosEnabled(kerberosEnabled == :rb_kerberos_yes)
 
       AuthServer.WriteSLPEnabled(
         Convert.to_boolean(UI.QueryWidget(Id(:cb_register_slp), :Value))

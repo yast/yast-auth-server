@@ -586,7 +586,6 @@ module Yast
               UI.SetFocus(Id(:pw1))
               next
             end
-            #AuthServer.AddKerberosEntries
           end
 
           break

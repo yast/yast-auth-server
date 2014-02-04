@@ -221,7 +221,6 @@ module Yast
         DisplayError(AuthServer.ReadError)
         return :abort
       end
-      #    ret = AuthServer::WritePPolicyObjects();
       ret ? :next : :abort
     end
 
