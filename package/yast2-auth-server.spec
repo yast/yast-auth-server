@@ -82,7 +82,7 @@ rm -f $RPM_BUILD_ROOT/%{yast_plugindir}/libpy2ag_slapdconfig.so
 %{yast_desktopdir}/auth-server.desktop
 %{yast_desktopdir}/openldap-mirrormode.desktop
 %{yast_plugindir}/libpy2ag_slapdconfig.*
-%{yast_schemadir}/autoyast/rnc/ldap-server.rnc
+%{yast_schemadir}/autoyast/rnc/auth-server.rnc
 %{yast_scrconfdir}/*
 %{yast_agentdir}/*
 %{yast_ybindir}/ldap-server-ssl-check
