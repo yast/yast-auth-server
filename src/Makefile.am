@@ -34,7 +34,7 @@ scrconf_DATA = \
 
 schemafilesdir = $(schemadir)/autoyast/rnc
 schemafiles_DATA = \
-  autoyast-rnc/ldap-server.rnc
+  autoyast-rnc/auth-server.rnc
 
 agent_SCRIPTS = \
   servers_non_y2/ag_kadmin \

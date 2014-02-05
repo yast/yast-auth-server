@@ -93,7 +93,7 @@ module Yast
       end
 
       Builtins.y2debug("ret=%1", @ret)
-      Builtins.y2milestone("LdapServer auto finished")
+      Builtins.y2milestone("AuthServer auto finished")
       Builtins.y2milestone("----------------------------------------")
 
       deep_copy(@ret) 

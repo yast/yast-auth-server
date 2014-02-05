@@ -12,12 +12,11 @@ module Yast
       textdomain "auth-server"
       Yast.import "CWMFirewallInterfaces"
       Yast.import "Label"
-      Yast.import "Ldap"
       Yast.import "Popup"
       Yast.import "Wizard"
 
       @firewall_settings = {
-        "services"        => ["service:openldap"],
+        "services"        => ["service:openldap", "service:kdc", "service:kadmind"],
         "display_details" => true
       }
 
@@ -59,6 +58,29 @@ module Yast
                     Id(:cb_register_slp),
                     _("Register at an &SLP Daemon"),
                     AuthServer.ReadSLPEnabled
+                  )
+                ),
+                HStretch()
+              )
+            )
+          ),
+          VSpacing(),
+          VBox(
+            Frame(
+              _("&Start Kerberos Server"),
+              VBox(
+                RadioButtonGroup(
+                  Id(:rb_kerberos_enable),
+                  VBox(
+                    Left(RadioButton(Id(:rb_kerberos_no), Opt(:notify), Label.NoButton)),
+                    Left(
+                      RadioButton(
+                        Id(:rb_kerberos_yes),
+                        Opt(:notify),
+                        Label.YesButton,
+                        true
+                      )
+                    )
                   )
                 ),
                 HStretch()

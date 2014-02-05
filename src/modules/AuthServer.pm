@@ -1,5 +1,5 @@
 #! /usr/bin/perl -w
-# File:		modules/LdapServer.pm
+# File:		modules/AuthServer.pm
 # Package:	Configuration of ldap-server
 # Summary:	LdapServer settings, input and output functions
 # Authors:	Ralf Haferkamp <rhafer@suse.de>, Andreas Bauer <abauer@suse.de>
@@ -147,6 +147,20 @@ my $defaultGlobalAcls = [
                 ]
         }
     ];
+my $krb5acl = [
+        {
+            'target' => {
+                        'attrs'  => "krbPrincipalKey,krbExtraData"
+                       },
+            'access' => [
+                       {
+                        'level' => 'none',
+                        'type'  => '*'
+                       }
+                     ]
+        }
+    ];
+
 my $defaultIndexes = [
         { "name" => "objectclass",
           "eq" => YaST::YCP::Boolean(1) 
@@ -287,7 +301,8 @@ sub Read {
 
     $serviceInfo = Service->FullInfo("krb5kdc");
     y2milestone("Serviceinfo krb5: ". Data::Dumper->Dump([$serviceInfo]));
-    $kerberosEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
+    my $kerberosIsEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
+    $kerberosEnabled = $kerberosIsEnabled;
 
     y2milestone("ldap IsRunning: " . $isRunning . " ldap IsEnabled: " . $isEnabled . " krb5 IsEnabled: " . $kerberosEnabled);
 
@@ -742,29 +757,23 @@ sub initLDAP
 
         my $uriParts = URL->Parse($ldapdb->{ldap_servers});
 
-        if($uriParts->{scheme} eq "ldapi")
+        if($uriParts->{scheme} eq "ldapi" || $uriParts->{scheme} eq "ldaps" || $uriParts->{scheme} eq "ldap")
         {
             # local ldap server; use hostname and domain
             $ldapMap->{ldap_servers} = $self->ReadHostnameFQ(); # == ldap server IP address or name
         }
-         elsif(($uriParts->{scheme} eq "ldaps" || $uriParts->{scheme} eq "ldap") && $uriParts->{host} ne "")
-         {
-             # local ldap server; use hostname and domain
-             $ldapMap->{ldap_servers} = $uriParts->{host}; # == ldap server IP address or name
-             $ldapMap->{ldap_port} = $uriParts->{port};
-         }
-         else
-         {
-             y2error("Wrong LDAP URI: scheme ".$uriParts->{scheme}." not allowed");
-             $self->SetError(_("Invalid LDAP URI scheme."), $uriParts->{scheme}." is not allowed.");
-             return 0;
-         }
+        else
+        {
+            y2error("Wrong LDAP URI: scheme ".$uriParts->{scheme}." not allowed");
+            $self->SetError(_("Invalid LDAP URI scheme."), $uriParts->{scheme}." is not allowed.");
+            return 0;
+        }
 
-         if(!exists $ldapMap->{ldap_port} || !defined $ldapMap->{ldap_port} || $ldapMap->{ldap_port} eq "")
-         {
-             # ldaps on 636 is not supported by the ldap agent
-             $ldapMap->{ldap_port} = 389;
-         }
+        if(!exists $ldapMap->{ldap_port} || !defined $ldapMap->{ldap_port} || $ldapMap->{ldap_port} eq "")
+        {
+            # ldaps on 636 is not supported by the ldap agent
+            $ldapMap->{ldap_port} = 389;
+        }
     }
 
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_servers'},
@@ -1075,12 +1084,12 @@ sub WriteKerberosDatabase
             }
         }
 
-        if(Service->Status("krb5kdc") == 0 && getServiceEnabled())
+        if(Service->Status("krb5kdc") == 0 && $self->ReadKerberosEnabled())
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "restart");
         }
-        elsif(getServiceEnabled())
+        elsif($self->ReadKerberosEnabled())
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "start");
@@ -1091,12 +1100,12 @@ sub WriteKerberosDatabase
             Service->RunInitScript ("krb5kdc", "stop");
         }
 
-        if(Service->Status("kadmind") == 0 && getServiceEnabled())
+        if(Service->Status("kadmind") == 0 && $self->ReadKerberosEnabled())
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "restart");
         }
-        elsif(getServiceEnabled())
+        elsif($self->ReadKerberosEnabled())
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "start");
@@ -1470,6 +1479,22 @@ sub WriteServiceSettings {
         Progress->Finish();
         return 0;
     }
+    my $kerberosWasEnabled = Service->Enabled("krb5kdc");
+    if ( !$wasEnabled && $kerberosEnabled  )
+    {
+        my $progressItems = [ _("Enabling Kerberos Server"),
+                _("Starting Kerberos Server")
+            ];
+        Progress->New(_("Activating Kerberos Server"), "", 2, $progressItems, $progressItems, "");
+        Progress->NextStage();
+        Service->Enable("krb5kdc");
+        Service->Enable("kadmind");
+        Progress->NextStage();
+        Service->Start("krb5kdc");
+        Service->Start("kadmind");
+        Progress->Finish();
+        return 0;
+    }
     return 1;
 }
 
@@ -1496,7 +1521,7 @@ sub Write {
                 _("Starting OpenLDAP Server"),
                 _("Creating Base Objects"),
                 _("Saving Kerberos Configuration") ];
-        Progress->New(_("Writing OpenLDAP Server Configuration"), "", 6, $progressItems, $progressItems, "");
+        Progress->New(_("Writing Auth Server Configuration"), "", 6, $progressItems, $progressItems, "");
 
         Progress->NextStage();
 
@@ -1686,6 +1711,31 @@ sub Write {
             Service->Enable("ldap");
             Service->Start("ldap");
         }
+        my $kerberosWasEnabled = Service->Enabled("krb5kdc");
+        if ( $kerberosWasEnabled && !$kerberosEnabled  )
+        {
+            # service was disabled during this session, just disable the service
+            # in the system, stop it and ignore any configuration changes.
+            my $progressItems = [ _("Stopping Kerberos Server"),
+                    _("Disabling Kerberos Server")
+                ];
+            Progress->New(_("De-activating Kerberos Server"), "", 2, $progressItems, $progressItems, "");
+            Progress->NextStage();
+            Service->Disable("krb5kdc");
+            Service->Disable("kadmind");
+            Progress->NextStage();
+            Service->Stop("krb5kdc");
+            Service->Stop("kadmind");
+            Progress->Finish();
+            return 1;
+        }
+        if ( ! $kerberosWasEnabled && $kerberosEnabled )
+        {
+            Service->Enable("krb5kdc");
+            Service->Enable("kadmind");
+            Service->Start("krb5kdc");
+            Service->Start("kadmind");
+        }
         my $progressItems = [ _("Writing Sysconfig files"),
                               _("Applying changes to Configuration Database"),
                               _("Applying changes to /etc/openldap/ldap.conf"),
@@ -1695,7 +1745,7 @@ sub Write {
                               _("Restarting OpenLDAP Server if required"),
                             ];
 
-        Progress->New(_("Writing OpenLDAP Configuration"), "", 7, $progressItems, $progressItems, "");
+        Progress->New(_("Writing AuthServer Configuration"), "", 7, $progressItems, $progressItems, "");
         Progress->NextStage();
 
         # these changes require a restart of slapd
@@ -1853,7 +1903,7 @@ sub Import {
         $usingDefaults = 1;
         $overwriteConfig = 0;
         $self->WriteServiceEnabled( 0 );
-        y2milestone("Wrong/empty ldap-server profile");
+        y2milestone("Wrong/empty auth-server profile");
         return 0;
     }
 
@@ -2650,6 +2700,17 @@ sub ReadFromDefaults
             return $rc;
         }
 
+	if ( $self->ReadKerberosEnabled() )
+        {
+            $rc = SCR->Write(".ldapserver.schema.addFromSchemafile", "/usr/share/doc/packages/krb5/kerberos.schema");
+            if ( ! $rc ) {
+                my $err = SCR->Error(".ldapserver");
+                y2error("Adding Schema failed: ".$err->{'summary'}." ".$err->{'description'});
+                $self->SetError( $err->{'summary'}, $err->{'description'} );
+                return $rc;
+            }
+        }
+
         if ( ! defined SCR->Read(".target.dir", $database->{directory}) ) {
             my $ret = SCR->Execute(".target.bash", "mkdir -m 0700 -p ".$database->{directory});
             if( ( $ret ) && ( ! defined  SCR->Read(".target.dir", $database->{directory}) ) ) {
@@ -2674,6 +2735,10 @@ sub ReadFromDefaults
             {
                 $self->ChangeDatabaseIndex(1, $idx );
             }
+        }
+	if ( $self->ReadKerberosEnabled() )
+        {
+                $self->ChangeDatabaseIndex(1, {"name" => "krbPrincipalName", "eq"   => 1} );
         }
         $self->WriteLdapConfBase($database->{'suffix'});
 
@@ -2766,6 +2831,10 @@ sub ReadFromDefaults
         # add default ACLs
         $rc = SCR->Write(".ldapserver.database.{-1}.acl", $defaultGlobalAcls );
         $rc = SCR->Write(".ldapserver.database.{1}.acl", $defaultDbAcls );
+	if ( $self->ReadKerberosEnabled() )
+        {
+            $rc = SCR->Write(".ldapserver.database.{1}.acl", $krb5acl );
+        }
         push @added_databases, $dbDefaults{'suffix'};
         $self->WriteAuthInfo( $dbDefaults{'suffix'}, 
                             { bind_dn => $dbDefaults{'rootdn'},
@@ -3139,73 +3208,6 @@ sub WriteKerberosLdapDBvalue
     my $val = shift;
 
     $ldapdb->{$key} = $val;
-}
-
-BEGIN { $TYPEINFO {AddKerberosEntries} = ["function", "boolean"]; }
-sub AddKerberosEntries
-{
-    my $ret = 0;
-    my $self = shift;
-
-    y2milestone("AddKerberosEntries");
-
-    if(! -e "/usr/share/doc/packages/krb5/kerberos.schema")
-    {
-        y2error("Kerberos schema file not found");
-        $self->SetError( _('Kerberos schema file not found.'), "/usr/share/doc/packages/krb5/kerberos.schema not found.");
-        return 0;
-    }
-
-    $ret = $self->AddSchemaToSchemaList("/usr/share/doc/packages/krb5/kerberos.schema");
-    if(! $ret)
-    {
-        y2error("AddKerberosEntries => AddSchemaToSchemaList call failed");
-        return 0;
-    }
-
-    $ret = $self->ChangeDatabaseIndex(1, {name => "krbPrincipalName", eq   => 1});
-    if(! $ret)
-    {
-        y2error("AddKerberosEntries => ChangeDatabaseIndex call failed");
-        return 0;
-    }
-
-    my $ldapacls = $self->ReadDatabaseAcl(1);
-    my $found = 0;
-    foreach my $acl (@{$ldapacls})
-    {
-        if(exists $acl->{target}->{attrs} && defined $acl->{target}->{attrs} &&
-           $acl->{target}->{attrs} =~ /krbPrincipalKey/i)
-        {
-            $found = 1;
-            last;
-        }
-    }
-
-    if(!$found)
-    {
-        my $krb5acl = {
-                       'target' => {
-                                    'attrs'  => "krbPrincipalKey,krbExtraData"
-                                   },
-                       'access' => [
-                                    {
-                                     'level' => 'none',
-                                     'type'  => '*'
-                                    }
-                                   ]
-                      };
-        unshift @{$ldapacls}, $krb5acl;
-
-        $ret = $self->ChangeDatabaseAcl(1, $ldapacls);
-        if(! $ret)
-        {
-            y2error("AddKerberosEntries => ChangeDatabaseAcl call failed");
-            return 0;
-        }
-    }
-
-    return 1;
 }
 
 BEGIN { $TYPEINFO{ReadDefaultLdapValues} = ["function", "void"]; }

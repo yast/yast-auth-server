@@ -5,7 +5,7 @@ Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
 X-KDE-ModuleType=Library
 X-KDE-HasReadOnlyMode=true
 X-KDE-Library=yast2
-X-SuSE-YaST-Call=ldap-server
+X-SuSE-YaST-Call=auth-server
 
 X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-Argument=
@@ -18,7 +18,7 @@ X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstRequires=lan,ca_mgm
 X-SuSE-YaST-AutoInstSchema=auth-server.rnc
 
-Icon=yast-auth-server
+Icon=yast-ldap-server
 Exec=xdg-su -c "/sbin/yast2 auth-server"
 
 Name=Authentication Server

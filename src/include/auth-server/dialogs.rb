@@ -179,7 +179,7 @@ module Yast
         else
           Builtins.y2error(
             Builtins.sformat(
-              "LdapServer Module: illegal handler '%1' for item '%2'",
+              "AuthServer Module: illegal handler '%1' for item '%2'",
               handler,
               item
             )
@@ -586,7 +586,6 @@ module Yast
               UI.SetFocus(Id(:pw1))
               next
             end
-            AuthServer.AddKerberosEntries
           end
 
           break
@@ -697,7 +696,7 @@ module Yast
         ret = Convert.to_symbol(UI.UserInput)
 
         if ret == :abort || ret == :cancel
-          if ReallyAbort()
+          if Popup.ReallyAbort(true)
             break
           else
             next
@@ -909,7 +908,7 @@ module Yast
               Report.Error(
                 Ops.add(
                   Ops.add(
-                    "LdapServer Module: illegal input handler for item '",
+                    "AuthServer Module: illegal input handler for item '",
                     @current_tree_item
                   ),
                   "'"

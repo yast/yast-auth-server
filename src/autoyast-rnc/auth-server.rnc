@@ -2,10 +2,10 @@ default namespace = "http://www.suse.com/1.0/yast2ns"
 namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
 namespace config = "http://www.suse.com/1.0/configns"
 
-#start = element profile { ldap-server }
+#start = element profile { auth-server }
 #include '/usr/share/YaST2/schema/autoyast/rnc/common.rnc'
 
-ldap-server = element ldap-server {
+auth-server = element auth-server {
     element daemon {
         element listeners {
             LIST,
