@@ -87,3 +87,4 @@ rm -f $RPM_BUILD_ROOT/%{yast_plugindir}/libpy2ag_slapdconfig.so
 %{yast_ybindir}/ldap-server-ssl-check
 %doc %{yast_docdir}
 %doc COPYING.MIT
+%doc COPYING
