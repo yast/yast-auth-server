@@ -292,8 +292,8 @@ sub Read {
     Progress->New(_("Initializing Authentication Server Configuration"), " ", 3, $progressItems, $progressItems, "");
     Progress->NextStage();
 
-    $serviceEnabled = Service->Enabled("ldap");
-    $serviceRunning = Service->Status("ldap") == 0;
+    $serviceEnabled = Service->Enabled("slapd");
+    $serviceRunning = Service->Status("slapd") == 0;
 
     $kerberosEnabled = Service->Enabled("krb5kdc");
 
@@ -1447,7 +1447,7 @@ sub WriteServiceSettings {
         SCR->Write('.sysconfig.openldap.OPENLDAP_START_LDAPS', 'no');
     }
     SuSEFirewall->Write();
-    my $wasEnabled = Service->Enabled("ldap");
+    my $wasEnabled = Service->Enabled("slapd");
     if ( !$wasEnabled && $serviceEnabled  )
     {
         # service was disabled during this session, just disable the service
@@ -1457,9 +1457,9 @@ sub WriteServiceSettings {
             ];
         Progress->New(_("Activating OpenLDAP Server"), "", 2, $progressItems, $progressItems, "");
         Progress->NextStage();
-        Service->Enable("ldap");
+        Service->Enable("slapd");
         Progress->NextStage();
-        Service->Start("ldap");
+        Service->Start("slapd");
         Progress->Finish();
         return 0;
     }
@@ -1468,7 +1468,7 @@ sub WriteServiceSettings {
         my $progressItems = [_("Starting LDAP Server") ];
         Progress->New(_("Restarting OpenLDAP Server"), "", 1, $progressItems, $progressItems, "");
         Progress->NextStage();
-        Service->Start("ldap");
+        Service->Start("slapd");
         Progress->Finish();
         return 0;
     }
@@ -1608,7 +1608,7 @@ sub Write {
         }
         Progress->NextStage();
 
-        $rc = Service->Enable("ldap");
+        $rc = Service->Enable("slapd");
         if ( ! $rc )
         {
             y2error("Error while enabing the LDAP Service: ". Service->Error() );
@@ -1624,7 +1624,7 @@ sub Write {
         {
             SCR->Write('.sysconfig.openldap.OPENLDAP_START_LDAPS', 'no');
         }
-        $rc = Service->Restart("ldap");
+        $rc = Service->Restart("slapd");
         if (! $rc )
         {
             y2error("Error while starting the LDAP service");
@@ -1683,7 +1683,7 @@ sub Write {
         Progress->Finish();
         SuSEFirewall->Write();
     } else {
-        my $wasEnabled = Service->Enabled("ldap");
+        my $wasEnabled = Service->Enabled("slapd");
         if ( $wasEnabled && !$serviceEnabled  )
         {
             # service was disabled during this session, just disable the service
@@ -1693,16 +1693,16 @@ sub Write {
                 ];
             Progress->New(_("De-activating OpenLDAP Server"), "", 2, $progressItems, $progressItems, "");
             Progress->NextStage();
-            Service->Disable("ldap");
+            Service->Disable("slapd");
             Progress->NextStage();
-            Service->Stop("ldap");
+            Service->Stop("slapd");
             Progress->Finish();
             return 1;
         }
         if ( ! $wasEnabled && $serviceEnabled )
         {
-            Service->Enable("ldap");
-            Service->Start("ldap");
+            Service->Enable("slapd");
+            Service->Start("slapd");
         }
         my $kerberosWasEnabled = Service->Enabled("krb5kdc");
         if ( $kerberosWasEnabled && !$kerberosEnabled  )
@@ -1864,7 +1864,7 @@ sub Write {
             }
             y2milestone("background tasks completed");
             Progress->NextStage();
-            Service->Restart("ldap");
+            Service->Restart("slapd");
         }
         else
         {
@@ -2500,7 +2500,7 @@ sub MigrateSlapdConf
     # Explicit cache flush, see bnc#350581 for details
     SCR->Write(".sysconfig.openldap", undef);
     Progress->NextStage();
-    $rc = Service->Restart("ldap");
+    $rc = Service->Restart("slapd");
     if (! $rc )
     {
         y2error("Error while starting the LDAP service");

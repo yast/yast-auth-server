@@ -1502,9 +1502,9 @@ sub ModifyService {
     my $enable = shift;
 
     if( $enable ) {
-        Service->Adjust( "ldap", "enable" );
+        Service->Adjust( "slapd", "enable" );
     } else {
-        Service->Adjust( "ldap", "disable" );
+        Service->Adjust( "slapd", "disable" );
     }
     return 1;
 }
@@ -1528,14 +1528,14 @@ sub SwitchService {
     my $ret = undef;
 
     if( $enable ) {
-        $ret = Service->RunInitScript( "ldap", "restart");
+        $ret = Service->RunInitScript( "slapd", "restart");
         if(! defined $ret || $ret != 0) {
             return $self->SetError(summary => __("Cannot restart the service."),
                                    description => "LDAP restart failed ($ret)",
                                    code => "SERVICE_RESTART_FAILED");
         }
     } else {
-        $ret = Service->RunInitScript( "ldap", "stop" );
+        $ret = Service->RunInitScript( "slapd", "stop" );
         if(! defined $ret || $ret != 0) {
             return $self->SetError(summary => __("Cannot stop the service."),
                                    description => "LDAP stop failed ($ret)",
@@ -1559,7 +1559,7 @@ EXAMPLE
 BEGIN { $TYPEINFO{ReadService} = ["function", "boolean"]; }
 sub ReadService {
     my $self = shift;
-    return Service->Enabled('ldap');
+    return Service->Enabled('slapd');
 }
 
 =item *
