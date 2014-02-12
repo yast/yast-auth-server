@@ -292,19 +292,12 @@ sub Read {
     Progress->New(_("Initializing Authentication Server Configuration"), " ", 3, $progressItems, $progressItems, "");
     Progress->NextStage();
 
-    my $serviceInfo = Service->FullInfo("ldap");
-    y2milestone("Serviceinfo ldap: ". Data::Dumper->Dump([$serviceInfo]));
-    my $isRunning = ( defined $serviceInfo->{"started"}) && ($serviceInfo->{"started"} == 0); # 0 == "running"
-    my $isEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
-    $serviceEnabled = $isEnabled;
-    $serviceRunning = $isRunning;
+    $serviceEnabled = Service->Enabled("slapd");
+    $serviceRunning = Service->Status("slapd") == 0;
 
-    $serviceInfo = Service->FullInfo("krb5kdc");
-    y2milestone("Serviceinfo krb5: ". Data::Dumper->Dump([$serviceInfo]));
-    my $kerberosIsEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
-    $kerberosEnabled = $kerberosIsEnabled;
+    $kerberosEnabled = Service->Enabled("krb5kdc");
 
-    y2milestone("ldap IsRunning: " . $isRunning . " ldap IsEnabled: " . $isEnabled . " krb5 IsEnabled: " . $kerberosEnabled);
+    y2milestone("ldap Running: " . $serviceRunning . " ldap Enabled: " . $serviceEnabled . " krb5 Enabled: " . $kerberosEnabled);
 
     $use_ldapi_listener = ( "yes" eq SCR->Read('.sysconfig.openldap.OPENLDAP_START_LDAPI') );
     $ldapi_interfaces = SCR->Read('.sysconfig.openldap.OPENLDAP_LDAPI_INTERFACES');
@@ -324,7 +317,7 @@ sub Read {
     if ( $configBackend eq "ldap" )
     {
         $usesBackConfig = 1;
-        if ( $isRunning )
+        if ( $serviceRunning )
         {
             # assume a changed config as we don't ship a default for back-config
             $slapdConfChanged = 1;
@@ -1454,7 +1447,7 @@ sub WriteServiceSettings {
         SCR->Write('.sysconfig.openldap.OPENLDAP_START_LDAPS', 'no');
     }
     SuSEFirewall->Write();
-    my $wasEnabled = Service->Enabled("ldap");
+    my $wasEnabled = Service->Enabled("slapd");
     if ( !$wasEnabled && $serviceEnabled  )
     {
         # service was disabled during this session, just disable the service
@@ -1464,9 +1457,9 @@ sub WriteServiceSettings {
             ];
         Progress->New(_("Activating OpenLDAP Server"), "", 2, $progressItems, $progressItems, "");
         Progress->NextStage();
-        Service->Enable("ldap");
+        Service->Enable("slapd");
         Progress->NextStage();
-        Service->Start("ldap");
+        Service->Start("slapd");
         Progress->Finish();
         return 0;
     }
@@ -1475,7 +1468,7 @@ sub WriteServiceSettings {
         my $progressItems = [_("Starting LDAP Server") ];
         Progress->New(_("Restarting OpenLDAP Server"), "", 1, $progressItems, $progressItems, "");
         Progress->NextStage();
-        Service->Start("ldap");
+        Service->Start("slapd");
         Progress->Finish();
         return 0;
     }
@@ -1615,7 +1608,7 @@ sub Write {
         }
         Progress->NextStage();
 
-        $rc = Service->Enable("ldap");
+        $rc = Service->Enable("slapd");
         if ( ! $rc )
         {
             y2error("Error while enabing the LDAP Service: ". Service->Error() );
@@ -1631,7 +1624,7 @@ sub Write {
         {
             SCR->Write('.sysconfig.openldap.OPENLDAP_START_LDAPS', 'no');
         }
-        $rc = Service->Restart("ldap");
+        $rc = Service->Restart("slapd");
         if (! $rc )
         {
             y2error("Error while starting the LDAP service");
@@ -1647,6 +1640,8 @@ sub Write {
 		["localhost"]);
 	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
 		[$ldapconf_base]);
+	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
+		[$dbDefaults{'rootdn'}]);
             my $tls = $self->ReadTlsConfig();
             if ( ref($tls) eq "HASH" && $tls->{'caCertFile'} ne "" )
             {
@@ -1690,7 +1685,7 @@ sub Write {
         Progress->Finish();
         SuSEFirewall->Write();
     } else {
-        my $wasEnabled = Service->Enabled("ldap");
+        my $wasEnabled = Service->Enabled("slapd");
         if ( $wasEnabled && !$serviceEnabled  )
         {
             # service was disabled during this session, just disable the service
@@ -1700,16 +1695,16 @@ sub Write {
                 ];
             Progress->New(_("De-activating OpenLDAP Server"), "", 2, $progressItems, $progressItems, "");
             Progress->NextStage();
-            Service->Disable("ldap");
+            Service->Disable("slapd");
             Progress->NextStage();
-            Service->Stop("ldap");
+            Service->Stop("slapd");
             Progress->Finish();
             return 1;
         }
         if ( ! $wasEnabled && $serviceEnabled )
         {
-            Service->Enable("ldap");
-            Service->Start("ldap");
+            Service->Enable("slapd");
+            Service->Start("slapd");
         }
         my $kerberosWasEnabled = Service->Enabled("krb5kdc");
         if ( $kerberosWasEnabled && !$kerberosEnabled  )
@@ -1837,6 +1832,8 @@ sub Write {
 		["localhost"]);
 	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
 		[$ldapconf_base]);
+	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
+		[$dbDefaults{'rootdn'}]);
             y2milestone("Updated /etc/openldap/ldap.conf");
         }
         Progress->NextStage();
@@ -1871,7 +1868,7 @@ sub Write {
             }
             y2milestone("background tasks completed");
             Progress->NextStage();
-            Service->Restart("ldap");
+            Service->Restart("slapd");
         }
         else
         {
@@ -2507,7 +2504,7 @@ sub MigrateSlapdConf
     # Explicit cache flush, see bnc#350581 for details
     SCR->Write(".sysconfig.openldap", undef);
     Progress->NextStage();
-    $rc = Service->Restart("ldap");
+    $rc = Service->Restart("slapd");
     if (! $rc )
     {
         y2error("Error while starting the LDAP service");
@@ -3263,7 +3260,7 @@ sub ReadDefaultLdapValues
             }
             else
             {
-                $ldapdb->{ldap_kdc_dn} = "cn=Administrator,".$ldapbasedn;
+                $ldapdb->{ldap_kdc_dn} = $dbDefaults{'rootdn'};
             }
         }
 
@@ -3275,7 +3272,7 @@ sub ReadDefaultLdapValues
             }
             else
             {
-                $ldapdb->{ldap_kadmind_dn} = "cn=Administrator,".$ldapbasedn;
+                $ldapdb->{ldap_kadmind_dn} = $dbDefaults{'rootdn'};
             }
         }
     }
