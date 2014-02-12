@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Feb 12 10:13:07 UTC 2014 - ckornacker@suse.com
+
+- rename ldap-server.rnc autoyast profile to auth-server.rnc
+- replace deprecated Service calls
+
+-------------------------------------------------------------------
 Wed Jan 22 11:39:48 UTC 2014 - ckornacker@suse.com
 
 - rename yast2-ldap-server to yast2-auth-server

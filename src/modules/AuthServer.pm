@@ -292,19 +292,12 @@ sub Read {
     Progress->New(_("Initializing Authentication Server Configuration"), " ", 3, $progressItems, $progressItems, "");
     Progress->NextStage();
 
-    my $serviceInfo = Service->FullInfo("ldap");
-    y2milestone("Serviceinfo ldap: ". Data::Dumper->Dump([$serviceInfo]));
-    my $isRunning = ( defined $serviceInfo->{"started"}) && ($serviceInfo->{"started"} == 0); # 0 == "running"
-    my $isEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
-    $serviceEnabled = $isEnabled;
-    $serviceRunning = $isRunning;
+    $serviceEnabled = Service->Enabled("ldap");
+    $serviceRunning = Service->Status("ldap") == 0;
 
-    $serviceInfo = Service->FullInfo("krb5kdc");
-    y2milestone("Serviceinfo krb5: ". Data::Dumper->Dump([$serviceInfo]));
-    my $kerberosIsEnabled = scalar(@{$serviceInfo->{"start"}}) > 0;
-    $kerberosEnabled = $kerberosIsEnabled;
+    $kerberosEnabled = Service->Enabled("krb5kdc");
 
-    y2milestone("ldap IsRunning: " . $isRunning . " ldap IsEnabled: " . $isEnabled . " krb5 IsEnabled: " . $kerberosEnabled);
+    y2milestone("ldap Running: " . $serviceRunning . " ldap Enabled: " . $serviceEnabled . " krb5 Enabled: " . $kerberosEnabled);
 
     $use_ldapi_listener = ( "yes" eq SCR->Read('.sysconfig.openldap.OPENLDAP_START_LDAPI') );
     $ldapi_interfaces = SCR->Read('.sysconfig.openldap.OPENLDAP_LDAPI_INTERFACES');
@@ -324,7 +317,7 @@ sub Read {
     if ( $configBackend eq "ldap" )
     {
         $usesBackConfig = 1;
-        if ( $isRunning )
+        if ( $serviceRunning )
         {
             # assume a changed config as we don't ship a default for back-config
             $slapdConfChanged = 1;
