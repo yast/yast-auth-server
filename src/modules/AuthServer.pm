@@ -366,7 +366,7 @@ Is the LDAPI listener enabled?
     }
 
     # Read base-dn from /etc/openldap/ldap.conf
-    my $base_list = SCR->Read(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base" );
+    my $base_list = SCR->Read(".ldap_conf.value.base" );
     $ldapconf_base = $base_list->[0];
         
     if (! $self->ReadKerberosDatabase())
@@ -1636,19 +1636,15 @@ sub Write {
         if ( $write_ldapconf )
         {
             y2milestone("Updating /etc/openldap/ldap.conf");
-            SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".host",
-		["localhost"]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
-		[$ldapconf_base]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
-		[$dbDefaults{'rootdn'}]);
+            SCR->Write(".ldap_conf.value.host", ["localhost"]);
+            SCR->Write(".ldap_conf.value.base", [$ldapconf_base]);
+            SCR->Write(".ldap_conf.value.binddn", [$dbDefaults{'rootdn'}]);
             my $tls = $self->ReadTlsConfig();
             if ( ref($tls) eq "HASH" && $tls->{'caCertFile'} ne "" )
             {
-	        SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".tls_cacert",
-		    [$tls->{'caCertFile'}]);
+	        SCR->Write(".ldap_conf.value.tls_cacert", [$tls->{'caCertFile'}]);
             }
-            SCR->Write(".etc.ldap_conf", "force" );
+            SCR->Write(".ldap_conf", "force" );
         }
         $self->CreateBaseObjects();
         if ( $setupSyncreplMaster )
@@ -1828,12 +1824,9 @@ sub Write {
         Progress->NextStage();
         if ( $write_ldapconf )
         {
-            SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".host",
-		["localhost"]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
-		[$ldapconf_base]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
-		[$dbDefaults{'rootdn'}]);
+            SCR->Write(".ldap_conf.value.host", ["localhost"]);
+            SCR->Write(".ldap_conf.value.base", [$ldapconf_base]);
+            SCR->Write(".ldap_conf.value.binddn", [$dbDefaults{'rootdn'}]);
             y2milestone("Updated /etc/openldap/ldap.conf");
         }
         Progress->NextStage();
