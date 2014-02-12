@@ -1640,6 +1640,8 @@ sub Write {
 		["localhost"]);
 	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
 		[$ldapconf_base]);
+	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
+		[$dbDefaults{'rootdn'}]);
             my $tls = $self->ReadTlsConfig();
             if ( ref($tls) eq "HASH" && $tls->{'caCertFile'} ne "" )
             {
@@ -1830,6 +1832,8 @@ sub Write {
 		["localhost"]);
 	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
 		[$ldapconf_base]);
+	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
+		[$dbDefaults{'rootdn'}]);
             y2milestone("Updated /etc/openldap/ldap.conf");
         }
         Progress->NextStage();
@@ -3256,7 +3260,7 @@ sub ReadDefaultLdapValues
             }
             else
             {
-                $ldapdb->{ldap_kdc_dn} = "cn=Administrator,".$ldapbasedn;
+                $ldapdb->{ldap_kdc_dn} = $dbDefaults{'rootdn'};
             }
         }
 
@@ -3268,7 +3272,7 @@ sub ReadDefaultLdapValues
             }
             else
             {
-                $ldapdb->{ldap_kadmind_dn} = "cn=Administrator,".$ldapbasedn;
+                $ldapdb->{ldap_kadmind_dn} = $dbDefaults{'rootdn'};
             }
         }
     }
