@@ -1002,6 +1002,10 @@ sub ModifyKerberosLdapEntries
     return 1;
 }
 
+##
+ # Write Kerberos configuration and start services
+ # @return true on success
+ #
 BEGIN { $TYPEINFO{WriteKerberosDatabase} = ["function", "boolean"]; }
 sub WriteKerberosDatabase
 {
@@ -1077,36 +1081,26 @@ sub WriteKerberosDatabase
             }
         }
 
-        if(Service->Status("krb5kdc") == 0 && $self->ReadKerberosEnabled())
+        if(Service->Status("krb5kdc"))
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "restart");
         }
-        elsif($self->ReadKerberosEnabled())
+        else
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "start");
         }
-        else
-        {
-            Service->Adjust("krb5kdc", "disable");
-            Service->RunInitScript ("krb5kdc", "stop");
-        }
 
-        if(Service->Status("kadmind") == 0 && $self->ReadKerberosEnabled())
+        if(Service->Status("kadmind"))
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "restart");
         }
-        elsif($self->ReadKerberosEnabled())
+        else
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "start");
-        }
-        else
-        {
-            Service->Adjust("kadmind", "disable");
-            Service->RunInitScript ("kadmind", "stop");
         }
 
         $ret = 1;
@@ -1677,7 +1671,10 @@ sub Write {
                 );
         }
         Progress->NextStage();
-        $self->WriteKerberosDatabase();
+        if ( $self->ReadKerberosEnabled() )
+        {
+            $self->WriteKerberosDatabase();
+        }
         Progress->Finish();
         SuSEFirewall->Write();
     } else {
