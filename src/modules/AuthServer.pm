@@ -366,7 +366,7 @@ Is the LDAPI listener enabled?
     }
 
     # Read base-dn from /etc/openldap/ldap.conf
-    my $base_list = SCR->Read(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base" );
+    my $base_list = SCR->Read(".ldap_conf.value.base" );
     $ldapconf_base = $base_list->[0];
         
     if (! $self->ReadKerberosDatabase())
@@ -1002,6 +1002,10 @@ sub ModifyKerberosLdapEntries
     return 1;
 }
 
+##
+ # Write Kerberos configuration and start services
+ # @return true on success
+ #
 BEGIN { $TYPEINFO{WriteKerberosDatabase} = ["function", "boolean"]; }
 sub WriteKerberosDatabase
 {
@@ -1077,36 +1081,26 @@ sub WriteKerberosDatabase
             }
         }
 
-        if(Service->Status("krb5kdc") == 0 && $self->ReadKerberosEnabled())
+        if(Service->Status("krb5kdc"))
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "restart");
         }
-        elsif($self->ReadKerberosEnabled())
+        else
         {
             Service->Adjust("krb5kdc", "enable");
             Service->RunInitScript ("krb5kdc", "start");
         }
-        else
-        {
-            Service->Adjust("krb5kdc", "disable");
-            Service->RunInitScript ("krb5kdc", "stop");
-        }
 
-        if(Service->Status("kadmind") == 0 && $self->ReadKerberosEnabled())
+        if(Service->Status("kadmind"))
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "restart");
         }
-        elsif($self->ReadKerberosEnabled())
+        else
         {
             Service->Adjust("kadmind", "enable");
             Service->RunInitScript ("kadmind", "start");
-        }
-        else
-        {
-            Service->Adjust("kadmind", "disable");
-            Service->RunInitScript ("kadmind", "stop");
         }
 
         $ret = 1;
@@ -1636,19 +1630,15 @@ sub Write {
         if ( $write_ldapconf )
         {
             y2milestone("Updating /etc/openldap/ldap.conf");
-            SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".host",
-		["localhost"]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
-		[$ldapconf_base]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
-		[$dbDefaults{'rootdn'}]);
+            SCR->Write(".ldap_conf.value.host", ["localhost"]);
+            SCR->Write(".ldap_conf.value.base", [$ldapconf_base]);
+            SCR->Write(".ldap_conf.value.binddn", [$dbDefaults{'rootdn'}]);
             my $tls = $self->ReadTlsConfig();
             if ( ref($tls) eq "HASH" && $tls->{'caCertFile'} ne "" )
             {
-	        SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".tls_cacert",
-		    [$tls->{'caCertFile'}]);
+	        SCR->Write(".ldap_conf.value.tls_cacert", [$tls->{'caCertFile'}]);
             }
-            SCR->Write(".etc.ldap_conf", "force" );
+            SCR->Write(".ldap_conf", "force" );
         }
         $self->CreateBaseObjects();
         if ( $setupSyncreplMaster )
@@ -1681,7 +1671,10 @@ sub Write {
                 );
         }
         Progress->NextStage();
-        $self->WriteKerberosDatabase();
+        if ( $self->ReadKerberosEnabled() )
+        {
+            $self->WriteKerberosDatabase();
+        }
         Progress->Finish();
         SuSEFirewall->Write();
     } else {
@@ -1828,12 +1821,9 @@ sub Write {
         Progress->NextStage();
         if ( $write_ldapconf )
         {
-            SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".host",
-		["localhost"]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".base",
-		[$ldapconf_base]);
-	    SCR->Write(".etc.ldap_conf.value.\"/etc/openldap/ldap.conf\".binddn",
-		[$dbDefaults{'rootdn'}]);
+            SCR->Write(".ldap_conf.value.host", ["localhost"]);
+            SCR->Write(".ldap_conf.value.base", [$ldapconf_base]);
+            SCR->Write(".ldap_conf.value.binddn", [$dbDefaults{'rootdn'}]);
             y2milestone("Updated /etc/openldap/ldap.conf");
         }
         Progress->NextStage();
