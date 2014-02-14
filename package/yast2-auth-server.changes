@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Feb 14 10:39:49 UTC 2014 - ckornacker@suse.com
+
+- adapt to ldap.conf SCR agent namechange
+- restruct kerberos service invocation
+- 3.1.4 
+
+-------------------------------------------------------------------
 Wed Feb 12 10:13:07 UTC 2014 - ckornacker@suse.com
 
 - rename ldap-server.rnc autoyast profile to auth-server.rnc
