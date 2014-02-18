@@ -722,13 +722,13 @@ sub initLDAP
 {
     my $self = shift;
 
-    if ( $self->ReadProtocolListenerEnabled("ldaps") )
-    {
-        $self->WriteKerberosLdapDBvalue("ldap_servers", "ldaps://");
-    }
-    elsif ( $self->ReadProtocolListenerEnabled("ldapi") )
+    if ( $self->ReadProtocolListenerEnabled("ldapi") )
     {
         $self->WriteKerberosLdapDBvalue("ldap_servers", "ldapi://");
+    }
+    elsif ( $self->ReadProtocolListenerEnabled("ldaps") )
+    {
+        $self->WriteKerberosLdapDBvalue("ldap_servers", "ldaps://");
     }
     elsif ( $self->ReadProtocolListenerEnabled("ldap") )
     {
