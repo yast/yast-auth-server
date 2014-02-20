@@ -2817,11 +2817,12 @@ sub ReadFromDefaults
 
         # add default ACLs
         $rc = SCR->Write(".ldapserver.database.{-1}.acl", $defaultGlobalAcls );
-        $rc = SCR->Write(".ldapserver.database.{1}.acl", $defaultDbAcls );
 	if ( $self->ReadKerberosEnabled() )
         {
-            $rc = SCR->Write(".ldapserver.database.{1}.acl", $krb5acl );
-        }
+            $rc = SCR->Write(".ldapserver.database.{1}.acl", [ @$krb5acl, @$defaultDbAcls] );
+        } else {
+            $rc = SCR->Write(".ldapserver.database.{1}.acl", $defaultDbAcls );
+	}
         push @added_databases, $dbDefaults{'suffix'};
         $self->WriteAuthInfo( $dbDefaults{'suffix'}, 
                             { bind_dn => $dbDefaults{'rootdn'},
