@@ -67,6 +67,70 @@ my $use_ldap_listener = 0;
 my $ldapi_interfaces = "";
 my $ldaps_interfaces = "";
 my $ldap_interfaces = "";
+
+my $suseObjects = [
+        {"ou=group" => {
+                        "objectClass" => [ "organizationalUnit", "top" ],
+                        "ou"  => "group"
+        }},
+        {"ou=people" => {
+                        "objectClass" => [ "organizationalUnit", "top" ],
+                        "ou"  => "people"
+        }},
+        {"ou=ldapconfig" => {
+                        "objectClass" => [ "organizationalUnit", "top" ],
+                        "ou"  => "ldapconfig"
+        }},
+        {"cn=userconfiguration,ou=ldapconfig"  => {
+          "objectClass"           => [
+            "top",
+            "suseModuleConfiguration",
+            "suseUserConfiguration"
+          ],
+          "suseSearchFilter"      => ["objectClass=posixAccount"],
+          "susePasswordHash"      => ["SSHA"],
+          "suseSkelDir"           => ["/etc/skel"],
+          "suseMinUniqueId"       => ["1000"],
+          "suseNextUniqueId"      => ["1000"],
+          "suseMaxUniqueId"       => ["60000"],
+          "suseMinPasswordLength" => ["5"],
+          "suseMaxPasswordLength" => ["8"]
+        }},
+        {"cn=groupconfiguration,ou=ldapconfig" => {
+          "objectClass"           => [
+            "top",
+            "suseModuleConfiguration",
+            "suseGroupConfiguration"
+          ],
+          "suseSearchFilter" => ["objectClass=posixGroup"],
+          "suseMinUniqueId"  => ["1000"],
+          "suseNextUniqueId" => ["1000"],
+          "suseMaxUniqueId"  => ["60000"]
+        }},
+        {"cn=usertemplate,ou=ldapconfig"       => {
+          "objectClass"         => [
+            "top",
+            "suseObjectTemplate",
+            "suseUserTemplate"
+          ],
+          "suseNamingAttribute" => ["uid"],
+          "suseDefaultValue"    => [
+            "homeDirectory=/home/%uid",
+            "loginShell=/bin/bash"
+          ],
+          "susePlugin"          => ["UsersPluginLDAPAll"]
+        }},
+        {"cn=grouptemplate,ou=ldapconfig"      => {
+          "objectClass"         => [
+            "top",
+            "suseObjectTemplate",
+            "suseGroupTemplate"
+          ],
+          "suseNamingAttribute" => ["cn"],
+          "susePlugin"          => ["UsersPluginLDAPAll"]
+       }}
+];
+
 my $defaultDbAcls = [
         {
             'target' => {
@@ -722,19 +786,7 @@ sub initLDAP
 {
     my $self = shift;
 
-    if ( $self->ReadProtocolListenerEnabled("ldapi") )
-    {
-        $self->WriteKerberosLdapDBvalue("ldap_servers", "ldapi://");
-    }
-    elsif ( $self->ReadProtocolListenerEnabled("ldaps") )
-    {
-        $self->WriteKerberosLdapDBvalue("ldap_servers", "ldaps://");
-    }
-    elsif ( $self->ReadProtocolListenerEnabled("ldap") )
-    {
-        $self->WriteKerberosLdapDBvalue("ldap_servers", "ldap://");
-    }
-
+    $self->WriteKerberosLdapDBvalue("ldap_servers", "ldapi://");
     $self->WriteKerberosLdapDBvalue("ldap_kerberos_container_dn", "cn=krbContainer,".$dbDefaults{'suffix'});
     $self->WriteKerberosLdapDBvalue("ldap_kdc_dn", $dbDefaults{'rootdn'});
     $self->WriteKerberosLdapDBvalue("ldap_kadmind_dn", $dbDefaults{'rootdn'});
@@ -1173,48 +1225,37 @@ sub WriteLdapConfBase()
 sub CreateSUSEObjects()
 {
     my $self = shift;
+    my $ldapERR;
     my $useKerberos = $self->ReadKerberosEnabled();
 
-    if (SCR->Read(".target.size", '/usr/share/doc/packages/yast2-auth-server/suseobjects.ldif') <= 0)
+    foreach my $db (@added_databases )
     {
-        y2milestone("SUSE Objects Ldif does not exist");
-        return 0;
-    }
+        y2milestone("creating SUSE objects for ". $db );
 
-    open(LDIF, "/usr/share/doc/packages/yast2-auth-server/suseobjects.ldif") || return;
-
-    my $rc = SCR->Execute('.target.bash_output', 'mktemp /tmp/suseobjects-ldif.XXXXXX' );
-    if ( $rc->{'exit'} == 0 )
-    {
-        my $tmpfile = $rc->{'stdout'};
-        chomp $tmpfile;
-        y2milestone("using ldif file: ".$tmpfile );
-
-        open(OUTPUT, ">$tmpfile");
-        while(<LDIF>)
-        {
-            $_ =~ s/#LDAPBASE#/$dbDefaults{'suffix'}/g;
-	    $_ =~ s/susePlugin: UsersPluginKerberos//g if not $useKerberos;
-	    print OUTPUT $_;
-        }
-	close(OUTPUT);
-
-        $rc = SCR->Execute('.target.bash_output', 
-            "/usr/sbin/slapadd -F /etc/openldap/slapd.d -n 1 -l $tmpfile" );
-
-        if ( $rc->{'exit'} )
-        {
-            $self->SetError( _("Error while populating the configurations database with \"slapadd\"."),
-                    $rc->{'stderr'} );
-            y2error("Error during slapadd:" .$rc->{'stderr'});
+        my $db_auth = $self->ReadAuthInfo( $db );
+        if (! SCR->Execute(".ldap.bind", {"bind_dn" => $db_auth->{'bind_dn'},
+                                          "bind_pw" => $db_auth->{'bind_pw'}}) ) {
+            $ldapERR = SCR->Read(".ldap.error");
+            y2error( "LDAP bind failed" );
+            y2error( $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
             return 0;
         }
-        # cleanup
-        SCR->Execute('.target.bash', "rm -f $tmpfile" );
-    }
 
-    close(LDIF);
-    return 1;
+        foreach my $object (@{$suseObjects})
+        {
+            my ($key, $value) = each(%$object);
+            if ($key =~ /cn=usertemplate/ && $useKerberos)
+            {
+                push (@{$value->{'susePlugin'}}, 'UsersPluginKerberos');
+            }
+            if (! SCR->Write(".ldap.add", { dn => "$key,$db" } , $value)) {
+                $ldapERR = SCR->Read(".ldap.error");
+                y2error("Can not add $key entry.");
+                y2error( $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+            }
+        }
+    }
+    return;
 }
 
 sub CreateBaseObjects()
@@ -1647,7 +1688,6 @@ sub Write {
             # cleanup
             SCR->Execute('.target.bash', "rm -f $tmpfile" );
         }
-        $self->CreateSUSEObjects();
         Progress->NextStage();
 
         $rc = Service->Enable("slapd");
@@ -1689,6 +1729,7 @@ sub Write {
             SCR->Write(".ldap_conf", "force" );
         }
         $self->CreateBaseObjects();
+        $self->CreateSUSEObjects();
         if ( $setupSyncreplMaster )
         {
             $self->CreateSyncReplAccount();
@@ -1882,6 +1923,7 @@ sub Write {
             Progress->Finish();
             return 0;
         }
+        $self->CreateSUSEObjects();
         Progress->NextStage();
         if ( ! $self->CreatePpolicyObjects() )
         {

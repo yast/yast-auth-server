@@ -89,4 +89,3 @@ rm -f $RPM_BUILD_ROOT/%{yast_plugindir}/libpy2ag_slapdconfig.so
 %doc %{yast_docdir}
 %doc COPYING.MIT
 %doc COPYING
-%doc suseobjects.ldif
