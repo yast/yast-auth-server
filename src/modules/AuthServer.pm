@@ -1170,6 +1170,53 @@ sub WriteLdapConfBase()
     return 1;
 }
 
+sub CreateSUSEObjects()
+{
+    my $self = shift;
+    my $useKerberos = $self->ReadKerberosEnabled();
+
+    if (SCR->Read(".target.size", '/usr/share/doc/packages/yast2-auth-server/suseobjects.ldif') <= 0)
+    {
+        y2milestone("SUSE Objects Ldif does not exist");
+        return 0;
+    }
+
+    open(LDIF, "/usr/share/doc/packages/yast2-auth-server/suseobjects.ldif") || return;
+
+    my $rc = SCR->Execute('.target.bash_output', 'mktemp /tmp/suseobjects-ldif.XXXXXX' );
+    if ( $rc->{'exit'} == 0 )
+    {
+        my $tmpfile = $rc->{'stdout'};
+        chomp $tmpfile;
+        y2milestone("using ldif file: ".$tmpfile );
+
+        open(OUTPUT, ">$tmpfile");
+        while(<LDIF>)
+        {
+            $_ =~ s/#LDAPBASE#/$dbDefaults{'suffix'}/g;
+	    $_ =~ s/susePlugin: UsersPluginKerberos//g if not $useKerberos;
+	    print OUTPUT $_;
+        }
+	close(OUTPUT);
+
+        $rc = SCR->Execute('.target.bash_output', 
+            "/usr/sbin/slapadd -F /etc/openldap/slapd.d -n 1 -l $tmpfile" );
+
+        if ( $rc->{'exit'} )
+        {
+            $self->SetError( _("Error while populating the configurations database with \"slapadd\"."),
+                    $rc->{'stderr'} );
+            y2error("Error during slapadd:" .$rc->{'stderr'});
+            return 0;
+        }
+        # cleanup
+        SCR->Execute('.target.bash', "rm -f $tmpfile" );
+    }
+
+    close(LDIF);
+    return 1;
+}
+
 sub CreateBaseObjects()
 {
     my $self = shift;
@@ -1600,6 +1647,7 @@ sub Write {
             # cleanup
             SCR->Execute('.target.bash', "rm -f $tmpfile" );
         }
+        $self->CreateSUSEObjects();
         Progress->NextStage();
 
         $rc = Service->Enable("slapd");

@@ -1,0 +1,63 @@
+# Copyright (c) 2012 Peter Varkoly Nürnberg, Germany.  All rights reserved.
+dn: ou=group,#LDAPBASE#
+objectClass: top
+objectClass: organizationalUnit
+ou: group
+
+dn: ou=people,#LDAPBASE#
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=ldapconfig,#LDAPBASE#
+objectClass: top
+objectClass: organizationalUnit
+ou: ldapconfig
+
+dn: cn=grouptemplate,ou=ldapconfig,#LDAPBASE#
+cn: grouptemplate
+objectClass: top
+objectClass: suseObjectTemplate
+objectClass: suseGroupTemplate
+suseNamingAttribute: cn
+susePlugin: UsersPluginLDAPAll
+
+dn: cn=usertemplate,ou=ldapconfig,#LDAPBASE#
+cn: usertemplate
+objectClass: top
+objectClass: suseObjectTemplate
+objectClass: suseUserTemplate
+suseDefaultValue: homedirectory=/home/%uid
+suseDefaultValue: loginshell=/bin/bash
+suseNamingAttribute: uid
+susePlugin: UsersPluginLDAPAll
+susePlugin: UsersPluginKerberos
+
+dn: cn=groupconfiguration,ou=ldapconfig,#LDAPBASE#
+cn: groupconfiguration
+objectClass: top
+objectClass: suseModuleConfiguration
+objectClass: suseGroupConfiguration
+suseDefaultBase: ou=group,#LDAPBASE#
+suseDefaultTemplate: cn=grouptemplate,ou=ldapconfig,#LDAPBASE#
+suseMaxUniqueId: 60000
+suseMinUniqueId: 1000
+suseNextUniqueId: 1000
+suseSearchFilter: objectclass=posixgroup
+
+dn: cn=userconfiguration,ou=ldapconfig,#LDAPBASE#
+cn: userconfiguration
+objectClass: top
+objectClass: suseModuleConfiguration
+objectClass: suseUserConfiguration
+suseDefaultBase: ou=people,#LDAPBASE#
+suseDefaultTemplate: cn=usertemplate,ou=ldapconfig,#LDAPBASE#
+suseMaxPasswordLength: 8
+suseMinPasswordLength: 5
+susePasswordHash: CRYPT
+suseSearchFilter: objectclass=posixaccount
+suseSkelDir: /etc/skel
+suseMaxUniqueId: 200000
+suseMinUniqueId: 2000
+suseNextUniqueId: 2008
+
