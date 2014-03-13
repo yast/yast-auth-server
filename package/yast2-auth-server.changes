@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Thu Mar 13 15:41:40 UTC 2014 - ckornacker@suse.com
+
+- kerberos: use ldapi for communication
+- add SUSE objects to the database
+- fix LDAP ACLs
+- 3.1.5
+
+-------------------------------------------------------------------
 Fri Feb 14 10:39:49 UTC 2014 - ckornacker@suse.com
 
 - adapt to ldap.conf SCR agent namechange
@@ -10,6 +18,8 @@ Wed Feb 12 10:13:07 UTC 2014 - ckornacker@suse.com
 
 - rename ldap-server.rnc autoyast profile to auth-server.rnc
 - replace deprecated Service calls
+
+-------------------------------------------------------------------
 
 Fri Jan 31 23:44:25 UTC 2014 - varkoly@suse.com
 
