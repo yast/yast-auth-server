@@ -322,7 +322,6 @@ my $kdbvalues = {};
 my $foundDB = 0;
 my $dbtype = "ldap";
 my $dbrealm = undef;
-my $dbPassword = undef;
 my $kerberosDB = {};
 
 my @schema = ();
@@ -3190,23 +3189,6 @@ sub WriteKerberosDBvalue
     $kerberosDB->{$key} = $value;
 }
 
-BEGIN { $TYPEINFO {ReadKerberosPassword} = ["function", "string"]; }
-sub ReadKerberosPassword
-{
-    if(defined $dbPassword)
-    {
-        return $dbPassword;
-    }
-    return "";
-}
-
-BEGIN { $TYPEINFO {WriteKerberosPassword} = ["function", "void", "string"]; }
-sub WriteKerberosPassword
-{
-    my $self = shift;
-    $dbPassword = shift;
-}
-
 BEGIN { $TYPEINFO {ReadKdbvalue} = ["function", "string", "string"]; }
 sub ReadKdbvalue
 {
@@ -3488,9 +3470,10 @@ sub SetupKerberosLdapBackend
         return 0;
     };
 
+    # use same password for LDAP and Kerberos stash
     print IN "$ldapkadmpw\n";   # LDAP Administrator Password
-    print IN "$dbPassword\n";   # stash password
-    print IN "$dbPassword\n";   # verify stash password
+    print IN "$ldapkadmpw\n";   # stash password
+    print IN "$ldapkadmpw\n";   # verify stash password
 
     close IN;
     my $out = "";
