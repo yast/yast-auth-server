@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Mar 14 11:10:21 UTC 2014 - ckornacker@suse.com
+
+- use same password for LDAP and Kerberos stash
+- 3.1.6
+
+-------------------------------------------------------------------
 Thu Mar 13 15:41:40 UTC 2014 - ckornacker@suse.com
 
 - kerberos: use ldapi for communication

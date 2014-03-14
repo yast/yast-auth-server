@@ -501,18 +501,6 @@ module Yast
                 Opt(:hstretch),
                 _("R&ealm"),
                 AuthServer.ReadKerberosRealm
-              ),
-              Password(
-                Id(:pw1),
-                Opt(:hstretch),
-                Label.Password,
-                AuthServer.ReadKerberosPassword
-              ),
-              Password(
-                Id(:pw2),
-                Opt(:hstretch),
-                Label.ConfirmPassword,
-                AuthServer.ReadKerberosPassword
               )
             )
           ),
@@ -564,29 +552,7 @@ module Yast
             AuthServer.WriteKerberosDBvalue("key_stash_file", newstash)
           end
 
-          # --------------------------------- password checks
-          pw1 = Convert.to_string(UI.QueryWidget(Id(:pw1), :Value))
-          pw2 = Convert.to_string(UI.QueryWidget(Id(:pw2), :Value))
-
-          if pw1 != pw2
-            # The two user password information do not match
-            # error popup
-            Report.Error(_("The passwords do not match.\nTry again."))
-            UI.SetFocus(Id(:pw1))
-            next
-          end
-
           AuthServer.WriteKerberosRealm(realm)
-          AuthServer.WriteKerberosPassword(pw1)
-
-          if AuthServer.ReadKerberosEnabled
-            if ret == :next && pw1 == ""
-              # Error popup
-              Report.Error(_("Empty password is not allowed."))
-              UI.SetFocus(Id(:pw1))
-              next
-            end
-          end
 
           break
         elsif ret == :rb_yes
