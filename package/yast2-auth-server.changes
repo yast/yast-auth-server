@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 26 14:20:41 UTC 2014 - ckornacker@suse.com
+
+- add missing SUSE attributes for user and group configuration
+- 3.1.7
+
+-------------------------------------------------------------------
 Fri Mar 14 11:10:21 UTC 2014 - ckornacker@suse.com
 
 - use same password for LDAP and Kerberos stash
