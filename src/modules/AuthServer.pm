@@ -1247,6 +1247,16 @@ sub CreateSUSEObjects()
             {
                 push (@{$value->{'susePlugin'}}, 'UsersPluginKerberos');
             }
+            if ($key =~ /cn=userconfiguration/)
+            {
+                push (@{$value->{'suseDefaultBase'}}, "ou=people,$db");
+                push (@{$value->{'suseDefaultTemplate'}}, "cn=usertemplate,ou=ldapconfig,$db");
+            }
+            if ($key =~ /cn=groupconfiguration/)
+            {
+                push (@{$value->{'suseDefaultBase'}}, "ou=group,$db");
+                push (@{$value->{'suseDefaultTemplate'}}, "cn=grouptemplate,ou=ldapconfig,$db");
+            }
             if (! SCR->Write(".ldap.add", { dn => "$key,$db" } , $value)) {
                 $ldapERR = SCR->Read(".ldap.error");
                 y2error("Can not add $key entry.");
