@@ -131,7 +131,7 @@ module Yast
     end
 
     def MigrationMainDialog
-      caption = "Migrate existing Configuration"
+      caption = _("Migrate existing Configuration")
       summary = _(
         "Your system is currently configured to use the configuration file\n" +
           "/etc/openldap/slapd.conf. YaST only supports the dynamic configuration\n" +

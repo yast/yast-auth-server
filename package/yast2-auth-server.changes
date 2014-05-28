@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed May 28 08:54:18 UTC 2014 - ckornacker@suse.com
+
+- translate some untranslated strings (bnc#880031)
+- 3.1.8
+
+-------------------------------------------------------------------
 Wed Mar 26 14:20:41 UTC 2014 - ckornacker@suse.com
 
 - add missing SUSE attributes for user and group configuration
