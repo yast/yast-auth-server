@@ -22,7 +22,7 @@ module Yast
       Yast.include include_target, "auth-server/dialogs.rb"
       Yast.include include_target, "auth-server/wizards.rb"
 
-      @caption = "OpenLDAP MirrorMode Configuration"
+      @caption = _("OpenLDAP MirrorMode Configuration")
       @dlg_mm_overview = HSquash(
         VBox(
           Heading(_("MirrorMode Node List")),
