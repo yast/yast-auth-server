@@ -303,7 +303,7 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
             std::string dbtype(dbMap->value(YCPString("type"))->asString()->value_cstr());
             y2milestone("Database Type: %s", dbtype.c_str());
             boost::shared_ptr<OlcDatabase> db;
-            if ( dbtype == "bdb" || dbtype == "hdb" )
+            if ( dbtype == "bdb" || dbtype == "hdb" || dbtype == "mdb"   )
             {
                 db = boost::shared_ptr<OlcDatabase>(new OlcBdbDatabase(dbtype) );
             } 
@@ -333,7 +333,7 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
                     db->setRootPw( j->second->asString()->value_cstr() );
                     continue;
                 }
-                if ( dbtype == "bdb" || dbtype == "hdb" )
+                if ( dbtype == "bdb" || dbtype == "hdb" || dbtype == "mdb" )
                 {
                     boost::shared_ptr<OlcBdbDatabase> bdb = 
                         boost::dynamic_pointer_cast<OlcBdbDatabase>(db);
@@ -341,11 +341,11 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
                     {
                         bdb->setDirectory( j->second->asString()->value_cstr() );
                     }
-                    else if (std::string("entrycache") == j->first->asString()->value_cstr() )
+                    else if (std::string("entrycache") == j->first->asString()->value_cstr() dbtype != "mdb" )
                     {
                         bdb->setEntryCache( j->second->asInteger()->value() );
                     }
-                    else if (std::string("idlcache") == j->first->asString()->value_cstr() )
+                    else if (std::string("idlcache") == j->first->asString()->value_cstr() dbtype != "mdb" )
                     {
                         bdb->setIdlCache( j->second->asInteger()->value() );
                     }
@@ -704,16 +704,19 @@ YCPValue SlapdConfigAgent::ReadDatabase( const YCPPath &path,
                             YCPString( (*i)->getStringValue("olcRootDn") ));
                 resMap.add( YCPString("rootpw"), 
                             YCPString( (*i)->getStringValue("olcRootPw") ));
-                if ( dbtype == "bdb" || dbtype == "hdb" )
+                if ( dbtype == "bdb" || dbtype == "hdb" || dbtype == "mdb" )
                 {
                     boost::shared_ptr<OlcBdbDatabase> bdb = 
                         boost::dynamic_pointer_cast<OlcBdbDatabase>(*i);
                     resMap.add( YCPString("directory"), 
                                 YCPString( bdb->getStringValue("olcDbDirectory") ));
-                    resMap.add( YCPString("entrycache"), 
-                                YCPInteger( bdb->getEntryCache() ));
-                    resMap.add( YCPString("idlcache"), 
-                                YCPInteger( bdb->getIdlCache() ));
+		    if( dbtype != "mdb" )
+		    {
+		        resMap.add( YCPString("entrycache"), 
+		            	YCPInteger( bdb->getEntryCache() ));
+		        resMap.add( YCPString("idlcache"), 
+		            	YCPInteger( bdb->getIdlCache() ));
+		    }
                     YCPList checkPoint;
                     int kbytes, min;
                     bdb->getCheckPoint(kbytes, min);
@@ -1348,7 +1351,7 @@ YCPBoolean SlapdConfigAgent::WriteDatabase( const YCPPath &path,
         y2milestone("Database will get Index: %d", dbIndex);
         std::string dbtype(dbMap->value(YCPString("type"))->asString()->value_cstr());
         boost::shared_ptr<OlcDatabase> db;
-        if ( dbtype == "bdb" || dbtype == "hdb" )
+        if ( dbtype == "bdb" || dbtype == "hdb" || dbtype == "mdb" )
         {
             db = boost::shared_ptr<OlcDatabase>(new OlcBdbDatabase( dbtype ) );
         } 
@@ -1378,7 +1381,7 @@ YCPBoolean SlapdConfigAgent::WriteDatabase( const YCPPath &path,
                 db->setRootPw( j->second->asString()->value_cstr() );
                 continue;
             }
-            if ( dbtype == "bdb" || dbtype == "hdb" )
+            if ( dbtype == "bdb" || dbtype == "hdb" || dbtype == "mdb" )
             {
                 boost::shared_ptr<OlcBdbDatabase> bdb = 
                     boost::dynamic_pointer_cast<OlcBdbDatabase>(db);
@@ -1386,11 +1389,11 @@ YCPBoolean SlapdConfigAgent::WriteDatabase( const YCPPath &path,
                 {
                     bdb->setDirectory( j->second->asString()->value_cstr() );
                 }
-                else if (std::string("entrycache") == j->first->asString()->value_cstr() )
+                else if (std::string("entrycache") == j->first->asString()->value_cstr() && dbtype != "mdb" )
                 {
                     bdb->setEntryCache( j->second->asInteger()->value() );
                 }
-                else if (std::string("idlcache") == j->first->asString()->value_cstr() )
+                else if (std::string("idlcache") == j->first->asString()->value_cstr() && dbtype != "mdb" )
                 {
                     bdb->setIdlCache( j->second->asInteger()->value() );
                 }
@@ -1501,20 +1504,23 @@ YCPBoolean SlapdConfigAgent::WriteDatabase( const YCPPath &path,
                             (*i)->setStringValue("olcSecurity", newVal );
                         }
                     }
-                    if ( (*i)->getType() == "bdb" || (*i)->getType() == "hdb" )
+                    if ( (*i)->getType() == "bdb" || (*i)->getType() == "hdb" || (*i)->getType() == "mdb"  )
                     {
                         boost::shared_ptr<OlcBdbDatabase> bdb = 
                             boost::dynamic_pointer_cast<OlcBdbDatabase>(*i);
-                        val = dbMap.value( YCPString("entrycache") );
-                        if ( ! val.isNull() && val->isInteger() )
-                        {
-                            bdb->setEntryCache( val->asInteger()->value() );
-                        }
-                        val = dbMap.value( YCPString("idlcache") );
-                        if ( ! val.isNull() && val->isInteger() )
-                        {
-                            bdb->setIdlCache( val->asInteger()->value() );
-                        }
+			if( (*i)->getType() != "mdb" )
+			{
+                            val = dbMap.value( YCPString("entrycache") );
+                            if ( ! val.isNull() && val->isInteger() )
+                            {
+                                bdb->setEntryCache( val->asInteger()->value() );
+                            }
+                            val = dbMap.value( YCPString("idlcache") );
+                            if ( ! val.isNull() && val->isInteger() )
+                            {
+                                bdb->setIdlCache( val->asInteger()->value() );
+                            }
+			}
                         val = dbMap.value( YCPString("checkpoint") );
                         if ( ! val.isNull() && val->isList() )
                         {

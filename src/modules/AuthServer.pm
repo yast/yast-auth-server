@@ -2911,8 +2911,11 @@ sub ReadFromDefaults
         if ( SCR->Read(".target.size", $db_config) > 0 ) {
             SCR->Execute('.target.bash', 'rm -f '.$db_config );
         }
-        # add DB_CONFIG settings to the database object
-        $rc = SCR->Write(".ldapserver.database.{1}.dbconfig", $dbconfig_defaults );
+        if( $database->{type} ne 'mdb' )
+        {
+	    # add DB_CONFIG settings to the database object
+            $rc = SCR->Write(".ldapserver.database.{1}.dbconfig", $dbconfig_defaults );
+        }
 
         # add default ACLs
         $rc = SCR->Write(".ldapserver.database.{-1}.acl", $defaultGlobalAcls );
@@ -4078,6 +4081,8 @@ BEGIN { $TYPEINFO {AddDatabase} = ["function", "boolean", "integer", [ "map" , "
 sub AddDatabase
 {
     my ($self, $index, $db, $createDir, $createBase) = @_;
+    y2milestone( "AddDatabase is called" );
+    y2milestone( Dumper($db) );
     if ( ! $self->CheckDatabase($db) )
     {
         return 0;
@@ -4175,13 +4180,16 @@ sub AddDatabase
         return 0;
     }
 
-    # add some defaults to DB_CONFIG
-    $rc = SCR->Write(".ldapserver.database.{$index}.dbconfig", $dbconfig_defaults );
-    if(! $rc ) {
-        my $err = SCR->Error(".ldapserver");
-        y2error("Adding DB_CONFIG failed: ".$err->{'summary'}." ".$err->{'description'});
-        $self->SetError( $err->{'summary'}, $err->{'description'} );
-        return 0;
+        if( $db->{type} ne 'mdb' )
+    {
+        # add some defaults to DB_CONFIG
+        $rc = SCR->Write(".ldapserver.database.{$index}.dbconfig", $dbconfig_defaults );
+        if(! $rc ) {
+            my $err = SCR->Error(".ldapserver");
+            y2error("Adding DB_CONFIG failed: ".$err->{'summary'}." ".$err->{'description'});
+            $self->SetError( $err->{'summary'}, $err->{'description'} );
+            return 0;
+        }
     }
 
     if ( $createBase ) {
