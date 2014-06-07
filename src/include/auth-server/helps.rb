@@ -47,11 +47,13 @@ module Yast
           "<h3>Basic Database Settings</h3>"
         ) +
           _(
-            "<p>Choose the <b>Database</b> from <b>hdb</b> and <b>bdb</b>. <b>Hdb</b> is a\n" +
+            "<p>Choose the <b>Database</b> from <b>hdb</b> <b>bdb</b> and <b>mdb</b>. <b>Hdb</b> is a\n" +
               "variant of the <b>bdb</b> backend that uses a hierarchical database layout and\n" +
               "supports subtree renames. Otherwise it is identical to <b>bdb</b>. A\n" +
               "<b>hdb</b>-Database needs a larger <b>idlcachesize</b> than a\n" +
-              "<b>bdb</b>-Database for a good search performance.</p>\n"
+              "<b>bdb</b>-Database for a good search performance.\n" +
+	      "<b>mdb</b>-Database uses OpenLDAP's Lightning Memory-Mapped DB (LMDB) library to store data.\n" +
+	      "It similar to the <b>hdb</b> backend but it is both more space-efficient and more execution-efficient.</p>\n"
           ) +
           _(
             "<p>The <b>Base DN</b> option specifies the name of the root entry \nof the database being created.</p>"

@@ -1380,7 +1380,7 @@ module Yast
         item_name
       )
 
-      if type == "bdb" || type == "hdb"
+      if type == "bdb" || type == "hdb" || type == "mdb"
         Ops.set(@widget_map, item_name, bdb_item_map)
         Ops.set(@widget_map, Ops.add(item_name, "_index"), dbIndex)
         Ops.set(@widget_map, Ops.add(item_name, "_ppolicy"), dbPpolicy)
