@@ -341,11 +341,11 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
                     {
                         bdb->setDirectory( j->second->asString()->value_cstr() );
                     }
-                    else if (std::string("entrycache") == j->first->asString()->value_cstr() dbtype != "mdb" )
+                    else if (std::string("entrycache") == j->first->asString()->value_cstr() && dbtype != "mdb" )
                     {
                         bdb->setEntryCache( j->second->asInteger()->value() );
                     }
-                    else if (std::string("idlcache") == j->first->asString()->value_cstr() dbtype != "mdb" )
+                    else if (std::string("idlcache") == j->first->asString()->value_cstr() && dbtype != "mdb" )
                     {
                         bdb->setIdlCache( j->second->asInteger()->value() );
                     }
