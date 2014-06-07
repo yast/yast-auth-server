@@ -1643,7 +1643,7 @@ bool OlcDatabase::isBdbDatabase( const LDAPEntry& e )
     StringList oc = e.getAttributeByName("objectclass")->getValues();
     for( StringList::const_iterator i = oc.begin(); i != oc.end(); i++ )
     {
-        if ( strCaseIgnoreEquals(*i, "olcBdbConfig" ) || strCaseIgnoreEquals(*i, "olcHdbConfig" ) )
+        if ( strCaseIgnoreEquals(*i, "olcBdbConfig" ) || strCaseIgnoreEquals(*i, "olcHdbConfig" ) || strCaseIgnoreEquals(*i, "olcMdbConfig" ) )
         {
             return true;
         }
@@ -1671,6 +1671,10 @@ OlcBdbDatabase::OlcBdbDatabase( const std::string& type ) : OlcDatabase(type)
     if ( type == "hdb" )
     {
         m_dbEntryChanged.addAttribute(LDAPAttribute("objectclass", "olcHdbConfig"));
+    }
+    else if( type == "mdb" )
+    {
+        m_dbEntryChanged.addAttribute(LDAPAttribute("objectclass", "olcMdbConfig"));
     }
     else
     {
