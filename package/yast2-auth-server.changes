@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Sun Jun  8 06:24:03 UTC 2014 - varkoly@suse.com
+
+- bnc#881516 - OpenLDAP server mdb integration missing in yast
+- bnc#881631 - YaST Module MirrorMode crash
+- 3.1.9 
+
+-------------------------------------------------------------------
 Wed May 28 08:54:18 UTC 2014 - ckornacker@suse.com
 
 - translate some untranslated strings (bnc#880031)

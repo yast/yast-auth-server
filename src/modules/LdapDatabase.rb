@@ -170,7 +170,7 @@ module Yast
         Heading(_("Basic Database Settings")),
         HSquash(
           VBox(
-            Left(ComboBox(Id(:cb_type), _("Database Type"), ["hdb", "bdb"])),
+            Left(ComboBox(Id(:cb_type), _("Database Type"), ["hdb", "bdb","mdb"])),
             Left(
               InputField(
                 Id(:te_basedn),

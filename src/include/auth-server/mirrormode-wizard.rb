@@ -60,7 +60,7 @@ module Yast
       event = {}
       if !AuthServer.HasMirrorMode
         Wizard.SetContentsButtons(
-          caption,
+          @caption,
           @dlg_nomm_message,
           Ops.get_string(@HELPS, "service_dialog", "help not found"),
           Label.BackButton,

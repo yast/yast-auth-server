@@ -2911,8 +2911,11 @@ sub ReadFromDefaults
         if ( SCR->Read(".target.size", $db_config) > 0 ) {
             SCR->Execute('.target.bash', 'rm -f '.$db_config );
         }
-        # add DB_CONFIG settings to the database object
-        $rc = SCR->Write(".ldapserver.database.{1}.dbconfig", $dbconfig_defaults );
+        if( $database->{type} ne 'mdb' )
+        {
+	    # add DB_CONFIG settings to the database object
+            $rc = SCR->Write(".ldapserver.database.{1}.dbconfig", $dbconfig_defaults );
+        }
 
         # add default ACLs
         $rc = SCR->Write(".ldapserver.database.{-1}.acl", $defaultGlobalAcls );
@@ -2936,7 +2939,7 @@ sub ReadFromDefaults
  # Read the list of configured Databases.
  #
  # @return A list of hashes. Each hash represents a database and has the keys
- #         'type' (e.g. "hdb" or "bdb"), 'suffix' (the base DN of the database) and
+ #         'type' (e.g. "hdb" or "bdb" or "mdb" ), 'suffix' (the base DN of the database) and
  #         'index' (the index number used by back-config to order databases correctly)
  #
 BEGIN { $TYPEINFO {ReadDatabaseList} = ["function", [ "list", [ "map" , "string", "string"] ] ]; }
@@ -3727,8 +3730,8 @@ sub WriteSyncProv
     if ( keys %$syncprov )
     {
         my $db = $self->ReadDatabase( $dbindex );
-            if ( $db->{'type'} eq "bdb" || $db->{'type'} eq "hdb" )
-            {
+        if ( $db->{'type'} eq "bdb" || $db->{'type'} eq "hdb" || $db->{'type'} eq "mdb" )
+        {
             my $indexes = SCR->Read(".ldapserver.database.{".$dbindex."}.indexes" );
             y2milestone("indexes: ". Data::Dumper->Dump([$indexes]));
             if ( ! $indexes->{'entrycsn'}->{'eq'} )
@@ -3810,7 +3813,7 @@ sub WriteSyncRepl
     if ( keys %$syncrepl )
     {
         my $db = $self->ReadDatabase( $dbindex );
-            if ( $db->{'type'} eq "bdb" || $db->{'type'} eq "hdb" )
+            if ( $db->{'type'} eq "bdb" || $db->{'type'} eq "hdb" || $db->{'type'} eq "mdb" )
             {
             my $indexes = SCR->Read(".ldapserver.database.{".$dbindex."}.indexes" );
             y2milestone("indexes: ". Data::Dumper->Dump([$indexes]));
@@ -3843,7 +3846,7 @@ sub RemoveMMSyncrepl
     for ( my $i=0; $i < scalar(@{$dbs})-1; $i++)
     {
         my $type = $dbs->[$i+1]->{'type'};
-        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
         {
             SCR->Write(".ldapserver.database.{".$i."}.syncrepl.del", $uri );
         }
@@ -4078,6 +4081,8 @@ BEGIN { $TYPEINFO {AddDatabase} = ["function", "boolean", "integer", [ "map" , "
 sub AddDatabase
 {
     my ($self, $index, $db, $createDir, $createBase) = @_;
+    y2milestone( "AddDatabase is called" );
+    y2milestone( Dumper($db) );
     if ( ! $self->CheckDatabase($db) )
     {
         return 0;
@@ -4175,13 +4180,16 @@ sub AddDatabase
         return 0;
     }
 
-    # add some defaults to DB_CONFIG
-    $rc = SCR->Write(".ldapserver.database.{$index}.dbconfig", $dbconfig_defaults );
-    if(! $rc ) {
-        my $err = SCR->Error(".ldapserver");
-        y2error("Adding DB_CONFIG failed: ".$err->{'summary'}." ".$err->{'description'});
-        $self->SetError( $err->{'summary'}, $err->{'description'} );
-        return 0;
+        if( $db->{type} ne 'mdb' )
+    {
+        # add some defaults to DB_CONFIG
+        $rc = SCR->Write(".ldapserver.database.{$index}.dbconfig", $dbconfig_defaults );
+        if(! $rc ) {
+            my $err = SCR->Error(".ldapserver");
+            y2error("Adding DB_CONFIG failed: ".$err->{'summary'}." ".$err->{'description'});
+            $self->SetError( $err->{'summary'}, $err->{'description'} );
+            return 0;
+        }
     }
 
     if ( $createBase ) {
@@ -4447,7 +4455,7 @@ sub SetupRemoteForReplication
         y2milestone("Checking SyncProvider Overlay configuration");
         my $type = $dbs->[$i+1]->{'type'};
         my $suffix = $dbs->[$i+1]->{'suffix'};
-        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
         {
             my $db = SCR->Read(".ldapserver.database.{".$i."}" );
             my $prv = SCR->Read(".ldapserver.database.{".$i."}.syncprov" );
@@ -4471,7 +4479,7 @@ sub SetupRemoteForReplication
         y2milestone("Checking SyncConsumer configuration");
         my $type = $dbs->[$i+1]->{'type'};
         my $suffix = $dbs->[$i+1]->{'suffix'};
-        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
         {
             my $conslist = SCR->Read(".ldapserver.database.{".$i."}.syncrepl" );
             my $needsyncrepl = 1;
@@ -4542,7 +4550,7 @@ sub SetupRemoteForReplication
             y2milestone("Checking Update Referral");
             my $type = $dbs->[$i+1]->{'type'};
             my $suffix = $dbs->[$i+1]->{'suffix'};
-            if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+            if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
             {
                 my $updateref = SCR->Read(".ldapserver.database.{".$i."}.updateref" );
                 if ( ! defined $updateref  )
@@ -4560,7 +4568,7 @@ sub SetupRemoteForReplication
         y2milestone("Checking Database ACLs");
         my $type = $dbs->[$i+1]->{'type'};
         my $suffix = $dbs->[$i+1]->{'suffix'};
-        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
         {
             my $db = SCR->Read(".ldapserver.database.{".$i."}" );
             my $needsacl = 0;
@@ -4648,7 +4656,7 @@ sub SetupRemoteForReplication
         y2milestone("Checking Database Limits");
         my $type = $dbs->[$i+1]->{'type'};
         my $suffix = $dbs->[$i+1]->{'suffix'};
-        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" )
+        if ( $type eq "config" || $type eq "bdb" || $type eq "hdb" || $type eq "mdb" )
         {
             my $db = SCR->Read(".ldapserver.database.{".$i."}" );
             my $needslimit = 1;
