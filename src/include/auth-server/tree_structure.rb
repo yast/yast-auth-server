@@ -864,6 +864,9 @@ module Yast
           )
           Builtins.y2milestone("new hash: %1", newhash)
           AuthServer.UpdateDatabase(index, { "rootpw" => newhash })
+          if newpw["updstash"]
+            AuthServer.StashKerberosPassword(newpw["password"])
+          end
         else
           Builtins.y2milestone("password change cancelled")
         end

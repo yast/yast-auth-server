@@ -3515,8 +3515,15 @@ sub SetupKerberosLdapBackend
         return 0;
     }
 
+    return $self->StashKerberosPassword($ldapkadmpw);
+}
 
-    @cmdArgs = ();
+BEGIN { $TYPEINFO {StashKerberosPassword} = ["function", "boolean", "string"]; }
+sub StashKerberosPassword()
+{
+    my ($self, $kadmpw) = @_;
+
+    my @cmdArgs = ();
     push @cmdArgs, "stashsrvpw";
     push @cmdArgs, "-f", $ldapdb->{ldap_service_password_file};
     push @cmdArgs, $ldapdb->{ldap_kdc_dn};
@@ -3530,9 +3537,8 @@ sub SetupKerberosLdapBackend
         return 0;
     };
 
-
-    print IN "$ldapkadmpw\n";   # ldap kdc password
-    print IN "$ldapkadmpw\n";   # verify ldap kdc password
+    print IN "$kadmpw\n";   # ldap kdc password
+    print IN "$kadmpw\n";   # verify ldap kdc password
 
     close IN;
     $out = "";
@@ -3576,8 +3582,8 @@ sub SetupKerberosLdapBackend
             return 0;
         };
 
-        print IN "$ldapkadmpw\n";   # ldap kadmin password
-        print IN "$ldapkadmpw\n";   # verify ldap kadmin password
+        print IN "$kadmpw\n";   # ldap kadmin password
+        print IN "$kadmpw\n";   # verify ldap kadmin password
 
         close IN;
 
