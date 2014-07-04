@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Jul  4 10:03:05 UTC 2014 - ckornacker@suse.com
+
+- fix undefined method 'WriteKdbvalue' (bnc#885833)
+- add Kerberos dialog to Replication Master Setup (bnc#885829)
+- update kerberos stash when changing LDAP password (bnc#865296)
+- 3.1.10
+
+-------------------------------------------------------------------
 Sun Jun  8 06:24:03 UTC 2014 - varkoly@suse.com
 
 - bnc#881516 - OpenLDAP server mdb integration missing in yast
