@@ -3530,7 +3530,7 @@ sub StashKerberosPassword()
 
     y2milestone("Command: /usr/lib/mit/sbin/kdb5_ldap_util ".join(" ",@cmdArgs));
 
-    $pid = open3(\*IN, \*OUT, \*ERR, "/usr/lib/mit/sbin/kdb5_ldap_util", @cmdArgs)
+    my $pid = open3(\*IN, \*OUT, \*ERR, "/usr/lib/mit/sbin/kdb5_ldap_util", @cmdArgs)
     or do {
         y2error("Can not execute kdb5_ldap_util: $!");
         $self->SetError( _("Cannot execute kdb5_ldap_util."), "$!" );
@@ -3541,8 +3541,8 @@ sub StashKerberosPassword()
     print IN "$kadmpw\n";   # verify ldap kdc password
 
     close IN;
-    $out = "";
-    $err = "";
+    my $out = "";
+    my $err = "";
     while (<OUT>)
     {
         $out .= "$_";
@@ -3560,7 +3560,7 @@ sub StashKerberosPassword()
         chomp($err);
         y2error("Error during kdb5_ldap_util call: $err");
     }
-    $code = ($?>>8);
+    my $code = ($?>>8);
     if($code != 0)
     {
         $self->SetError( _("Writing to password file failed."), "$err" );
