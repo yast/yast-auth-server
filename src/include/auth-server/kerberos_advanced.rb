@@ -1540,7 +1540,7 @@ module Yast
     def set_adv_kdb_subtrees
       Builtins.y2debug("calling set_adv_kdb_subtrees")
 
-      AuthServer.WriteKdbvalue(
+      AuthServer.WriteKerberosLdapDBvalue(
         "kdb_subtrees",
         Convert.to_string(UI.QueryWidget(Id(:id_kdb_subtrees), :Value))
       )
@@ -1550,7 +1550,7 @@ module Yast
         "radiobutton val: %1",
         UI.QueryWidget(Id(:sub), :Value)
       )
-      AuthServer.WriteKdbvalue("kdb_sscope", i == true ? "sub" : "one")
+      AuthServer.WriteKerberosLdapDBvalue("kdb_sscope", i == true ? "sub" : "one")
 
       nil
     end
@@ -1572,7 +1572,7 @@ module Yast
     def set_adv_kdb_containerref
       Builtins.y2debug("calling set_adv_kdb_containerref")
 
-      AuthServer.WriteKdbvalue(
+      AuthServer.WriteKerberosLdapDBvalue(
         "kdb_containerref",
         Convert.to_string(UI.QueryWidget(Id(:id_kdb_containerref), :Value))
       )
@@ -1625,7 +1625,7 @@ module Yast
       if Convert.to_boolean(
           UI.QueryWidget(Id(:id_kdb_maxtktlife_available), :Value)
         ) == false
-        AuthServer.WriteKdbvalue("kdb_maxtktlife", "")
+        AuthServer.WriteKerberosLdapDBvalue("kdb_maxtktlife", "")
       else
         s = Builtins.tostring(
           Convert.to_integer(
@@ -1638,7 +1638,7 @@ module Yast
           Convert.to_string(UI.QueryWidget(Id(:id_kdb_maxtktlife_time), :Value))
         )
 
-        AuthServer.WriteKdbvalue("kdb_maxtktlife", s)
+        AuthServer.WriteKerberosLdapDBvalue("kdb_maxtktlife", s)
       end
 
       nil
@@ -1690,7 +1690,7 @@ module Yast
       if Convert.to_boolean(
           UI.QueryWidget(Id(:id_kdb_maxrenewlife_available), :Value)
         ) == false
-        AuthServer.WriteKdbvalue("kdb_maxrenewlife", "")
+        AuthServer.WriteKerberosLdapDBvalue("kdb_maxrenewlife", "")
       else
         s = Builtins.tostring(
           Convert.to_integer(
@@ -1705,7 +1705,7 @@ module Yast
           )
         )
 
-        AuthServer.WriteKdbvalue("kdb_maxrenewlife", s)
+        AuthServer.WriteKerberosLdapDBvalue("kdb_maxrenewlife", s)
       end
 
       nil
@@ -1866,7 +1866,7 @@ module Yast
         flags = Ops.add(flags, "-password_changing_service ")
       end
 
-      AuthServer.WriteKdbvalue("kdb_flags", flags)
+      AuthServer.WriteKerberosLdapDBvalue("kdb_flags", flags)
 
       nil
     end

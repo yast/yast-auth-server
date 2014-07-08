@@ -398,6 +398,7 @@ module Yast
 
     def ChangeAdminPassword
       result = nil
+      kerberos = AuthServer.ReadKerberosEnabled
       content = VBox(
         Heading(_("Change Administrator Password")),
         Password(Id(:te_rootpw), _("New Administrator &Password")),
@@ -405,6 +406,8 @@ module Yast
         Password(Id(:te_valid_rootpw), _("&Validate Password")),
         HSpacing(0.5),
         ComboBox(Id(:cb_cryptmethod), _("Password &Encryption"), @enc_types),
+        HSpacing(1),
+        CheckBox(Id(:cb_update_stash), _("Update Kerberos Stash"), kerberos),
         Wizard.CancelOKButtonBox
       )
       UI.OpenDialog(Opt(:decorated), content)
@@ -416,6 +419,7 @@ module Yast
           pw = Convert.to_string(UI.QueryWidget(:te_rootpw, :Value))
           verifypw = Convert.to_string(UI.QueryWidget(:te_valid_rootpw, :Value))
           hashAlgo = Convert.to_string(UI.QueryWidget(:cb_cryptmethod, :Value))
+          updstash = Convert.to_boolean(UI.QueryWidget(:cb_update_stash, :Value))
           if Builtins.size(pw) == 0
             Popup.Error(_("Enter a password"))
             UI.ChangeWidget(:te_rootpw, :Value, "")
@@ -424,6 +428,7 @@ module Yast
             result = {}
             Ops.set(result, "password", pw)
             Ops.set(result, "hashAlgo", hashAlgo)
+            Ops.set(result, "updstash", updstash)
             break
           else
             Popup.Error(

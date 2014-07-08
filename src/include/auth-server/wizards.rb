@@ -167,16 +167,19 @@ module Yast
           :mastersetup => "mastersetup",
           :abort       => :abort
         },
+        "mastersetup"        => {
+          :next        => "kerberos",
+          :abort       => :abort
+        },
         "kerberos"           => {
-	  :next     => "summary",
+          :next     => "summary",
           :advanced => "kerberos_adv"
-	},
+        },
         "kerberos_adv"       => {
           :abort => :abort,
           :next  => "kerberos",
           :back  => "kerberos"
-	},
-        "mastersetup"        => { :next => "summary", :abort => :abort },
+        },
         "summary"            => {
           :next     => "write",
           :abort    => :abort,
