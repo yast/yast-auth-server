@@ -392,7 +392,7 @@ module Yast
         UI.ChangeWidget(:cb_tls_enabled, :Value, true)
         UI.ChangeWidget(:cb_ssl_listener_enabled, :Enabled, true)
 
-        if Ops.get_string(tls, "caCertFile", "") == "/etc/ssl/certs/YaST-CA.pem" &&
+        if Ops.get_string(tls, "caCertFile", "") == "/usr/share/pki/trust/anchors/YaST-CA.pem" &&
             Ops.get_string(tls, "certFile", "") ==
               "/etc/ssl/servercerts/servercert.pem" &&
             Ops.get_string(tls, "certKeyFile", "") ==
@@ -513,7 +513,7 @@ module Yast
           if common_cert_available
             UI.ChangeWidget(:cb_use_common_cert, :Enabled, true)
             UI.ChangeWidget(:cb_use_common_cert, :Value, true)
-            UI.ChangeWidget(:te_ca_file, :Value, "/etc/ssl/certs/YaST-CA.pem")
+            UI.ChangeWidget(:te_ca_file, :Value, "/usr/share/pki/trust/anchors/YaST-CA.pem")
             UI.ChangeWidget(
               :te_cert_file,
               :Value,
@@ -539,7 +539,7 @@ module Yast
         )
         if use_common_cert
           if common_cert_available
-            UI.ChangeWidget(:te_ca_file, :Value, "/etc/ssl/certs/YaST-CA.pem")
+            UI.ChangeWidget(:te_ca_file, :Value, "/usr/share/pki/trust/anchors/YaST-CA.pem")
             UI.ChangeWidget(
               :te_cert_file,
               :Value,

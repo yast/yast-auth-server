@@ -2529,7 +2529,7 @@ sub WriteTlsConfigCommonCert
     my $tlsSettings = {
                 "certKeyFile"  => "/etc/ssl/servercerts/serverkey.pem",
                 "certFile"     => "/etc/ssl/servercerts/servercert.pem",
-                "caCertFile"   => "/etc/ssl/certs/YaST-CA.pem",
+                "caCertFile"   => "/usr/share/pki/trust/anchors/YaST-CA.pem",
                 "caCertDir"    => "",
                 "crlFile"      => "",
                 "crlCheck"     => 0,
