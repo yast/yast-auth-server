@@ -1,6 +1,10 @@
 yast2-auth-server
 =================
 
+[![Travis Build](https://travis-ci.org/yast/yast-auth-server.svg?branch=master)](https://travis-ci.org/yast/yast-auth-server)
+[![Jenkins Build](http://img.shields.io/jenkins/s/https/ci.opensuse.org/yast-auth-server-master.svg)](https://ci.opensuse.org/view/Yast/job/yast-auth-server-master/)
+
+
 With this YaST2 module you can configure LDAP and Kerberos authentication services
 
 Installation
