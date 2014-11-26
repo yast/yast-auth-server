@@ -1864,7 +1864,7 @@ sub ConfigureCommonServerCertificate {
     $tlsHash->{TLSCertificateFile}    = '/etc/ssl/servercerts/servercert.pem';
     $tlsHash->{TLSCertificateKeyFile} = '/etc/ssl/servercerts/serverkey.pem';
 
-    if(SCR->Read(".target.size", '/usr/share/pki/trust/anchors/YaST-CA.pem') > 0) {
+    if(SCR->Read(".target.size", '/etc/pki/trust/anchors/YaST-CA.pem') > 0) {
         $tlsHash->{TLSCACertificatePath} = '/etc/ssl/certs/';
         $tlsHash->{TLSCACertificateFile} = undef;
     }
