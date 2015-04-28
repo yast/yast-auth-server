@@ -28,7 +28,7 @@
 #define SLAPD_LOG_ERR   1
 
 typedef void (SlapdConfigLogCallback) (int level, const std::string &msg, 
-            const char* file=0, const int line=0, const char* function=0 );
+            const char* file, const int line, const char* function );
 
 class OlcConfigEntry
 {
