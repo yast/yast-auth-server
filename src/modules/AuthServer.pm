@@ -2511,33 +2511,6 @@ sub WriteTlsConfig
     return 1;
 }
 
-BEGIN { $TYPEINFO {WriteTlsConfigCommonCert} = ["function", "boolean" ]; }
-sub WriteTlsConfigCommonCert
-{
-    my $self = shift;
-    y2milestone("WriteTlsConfigCommonCert");
-
-    my $ret = SCR->Execute(".target.bash", 
-                           "/usr/bin/setfacl -m u:ldap:r /etc/ssl/servercerts/serverkey.pem");
-    if($ret != 0) {
-        $self->SetError(_("Can not set a filesystem ACL on the private key."),
-                               "setfacl -m u:ldap:r /etc/ssl/servercerts/serverkey.pem failed.\n".
-                               "Do you have filesystem acl support disabled?" );
-        return 0;
-    }
-
-    my $tlsSettings = {
-                "certKeyFile"  => "/etc/ssl/servercerts/serverkey.pem",
-                "certFile"     => "/etc/ssl/servercerts/servercert.pem",
-                "caCertFile"   => "/etc/pki/trust/anchors/YaST-CA.pem",
-                "caCertDir"    => "",
-                "crlFile"      => "",
-                "crlCheck"     => 0,
-                "verifyClient" => 0
-    };
-    return $self->WriteTlsConfig( $tlsSettings );
-}
-
 BEGIN { $TYPEINFO {MigrateSlapdConf} = ["function", "boolean"]; }
 sub MigrateSlapdConf
 {
@@ -2704,15 +2677,6 @@ sub InitGlobals
     if ( ! $globals_initialized )
     {
         SCR->Execute('.ldapserver.initGlobals' );
-        if(! $self->HaveCommonServerCertificate() )
-        {
-            y2milestone( _("Common server certificate not available. StartTLS is disabled.") );
-        }
-        else
-        {
-            $self->WriteTlsConfigCommonCert();
-            $self->WriteProtocolListenerEnabled("ldaps", 1);
-        }
         $globals_initialized = 1;
     }
     return 1;
@@ -4296,31 +4260,6 @@ sub GenerateRandPassword
             $randpw .= $chars[rand @chars];
     }
     return $randpw;
-}
-
-BEGIN { $TYPEINFO {HaveCommonServerCertificate} = ["function", "boolean" ]; }
-sub HaveCommonServerCertificate
-{
-    my $self = shift;
-    y2milestone("HaveCommonServerCertificate");
-
-    if (SCR->Read(".target.size", '/etc/ssl/certs/YaST-CA.pem') <= 0)
-    {
-        y2milestone("YaST-CA.pem does not exists");
-        return YaST::YCP::Boolean(0);
-    }
-
-    if (SCR->Read(".target.size", '/etc/ssl/servercerts/servercert.pem') <= 0 )
-    {
-        y2milestone("Common server certificate file does not exist");
-        return YaST::YCP::Boolean(0);
-    }
-    if ( SCR->Read(".target.size", '/etc/ssl/servercerts/serverkey.pem') <= 0 )
-    {
-        y2milestone("Common server certificate key file does not exist");
-        return YaST::YCP::Boolean(0);
-    }
-    return YaST::YCP::Boolean(1);
 }
 
 BEGIN { $TYPEINFO {ReadProtocolListenerEnabled} = ["function", "boolean", "string" ]; }
