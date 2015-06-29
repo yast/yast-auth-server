@@ -14,7 +14,7 @@ X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=auth-server
 X-SuSE-YaST-AutoInstClonable=true
-X-SuSE-YaST-AutoInstRequires=lan,ca_mgm
+X-SuSE-YaST-AutoInstRequires=lan
 X-SuSE-YaST-AutoInstSchema=auth-server.rnc
 
 Icon=yast-ldap-server

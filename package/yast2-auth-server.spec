@@ -28,7 +28,7 @@ License:        GPL-2.0+ and MIT
 BuildRequires:	boost-devel gcc-c++ libldapcpp-devel libtool perl-Digest-SHA1 perl-gettext perl-X500-DN pkg-config update-desktop-files yast2 yast2-core-devel yast2-ldap yast2-users
 BuildRequires:  yast2-devtools >= 3.1.10
 BuildRequires:  cyrus-sasl-devel
-Requires:	acl net-tools perl perl-Digest-SHA1 perl-gettext perl-X500-DN yast2 yast2-ca-management yast2-perl-bindings
+Requires:	acl net-tools perl perl-Digest-SHA1 perl-gettext perl-X500-DN yast2 yast2-perl-bindings
 
 # users/ldap_dialogs.ycp
 Requires:       yast2-users >= 2.22.3
