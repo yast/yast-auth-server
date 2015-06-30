@@ -17,7 +17,7 @@
 
 
 Name:           yast2-auth-server
-Version:        3.1.14
+Version:        3.1.15
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -34,8 +34,8 @@ Requires:	acl net-tools perl perl-Digest-SHA1 perl-gettext perl-X500-DN yast2 ya
 Requires:       yast2-users >= 2.22.3
 Requires:       yast2-ldap >= 3.1.0
 
-# Wizard::SetDesktopTitleAndIcon
-Requires:       yast2 >= 2.21.22
+# for Hostname::DefaultDomain
+Requires:       yast2 >= 3.1.136
 Requires:       yast2-ruby-bindings >= 1.0.0
 Requires:       yast2-ldap >= 3.1.2
 

@@ -2668,7 +2668,7 @@ sub InitDbDefaults
         if ( $domain eq "" )
         {
             y2milestone("unable to determine domainname falling back to hard-coded default");
-            $domain = "site";
+            $domain = Hostname->DefaultDomain();
         }
     }
     chomp($domain);
