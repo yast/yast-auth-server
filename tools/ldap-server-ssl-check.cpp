@@ -10,11 +10,19 @@ int main(int argc, char** argv)
 	std::string uri(argv[1]);
 	setenv("LDAPTLS_REQCERT", "hard", 1);
 	setenv("LDAPTLS_CACERT", argv[2], 1);
-	try 
-	{
-		LDAPConnection lc( uri );
-		lc.start_tls();
-	}
+        try
+        {
+                LDAPConnection lc( uri );
+         try {
+             lc.bind();
+             exit(0);
+         } catch (LDAPException e) {
+                if (e.getResultCode() == 49) {
+                    exit(0);
+                }
+         }
+                lc.start_tls();
+        }
 	catch ( LDAPException e )
 	{
 		std::cerr << e << std::endl;
