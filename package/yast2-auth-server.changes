@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Mar  3 15:47:29 UTC 2016 - varkoly@suse.com
+
+- bnc#965311 yast ldap-server-ssl-check does not handle ldaps only ldap+starttls works 
+- 3.1.16
+
+-------------------------------------------------------------------
 Tue Jun 30 05:46:47 UTC 2015 - mfilka@suse.com
 
 - bnc#923990
