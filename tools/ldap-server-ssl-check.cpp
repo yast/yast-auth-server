@@ -13,7 +13,6 @@ int main(int argc, char** argv)
 	try 
 	{
 		LDAPConnection lc( uri );
-		lc.start_tls();
 	}
 	catch ( LDAPException e )
 	{
