@@ -615,12 +615,6 @@ module Yast
         if Ops.greater_than(Builtins.size(ppolicy), 0)
           ppolicyEntry = Ops.get_map(ppolicy, "ppolicy", {})
         elsif Ops.greater_than(dbindex, 0) # try to read the ppolicy from the server
-          Ldap.Import(
-            {
-              "ldap_server" => "localhost",
-              "bind_dn"     => Ops.get_string(db, "rootdn", "")
-            }
-          )
           Ldap.LDAPInit
           pw = ""
           authinfo = AuthServer.ReadAuthInfo(Ops.get_string(db, "suffix", ""))
