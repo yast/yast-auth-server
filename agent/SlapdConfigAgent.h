@@ -67,7 +67,7 @@ class SlapdConfigAgent : public SCRAgent {
         YCPBoolean WriteSchema( const YCPPath &path,
                              const YCPValue &arg = YCPNull(),
                              const YCPValue &opt = YCPNull());
-        YCPString ConfigToLdif() const;
+        YCPString ConfigToLdif(std::string moduleLoadPath) const;
         bool remoteBindCheck( const YCPValue &arg );
         bool remoteSyncCheck( const YCPValue &arg );
         void startTlsCheck( LDAPConnection &c);

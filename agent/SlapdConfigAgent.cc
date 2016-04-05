@@ -113,7 +113,7 @@ YCPValue SlapdConfigAgent::Read( const YCPPath &path,
         }
         else if ( path->component_str(0) == "configAsLdif" )
         {
-            return ConfigToLdif();
+            return ConfigToLdif(arg->asString()->value());
         }
     } catch ( std::runtime_error e ) {
         y2error("Error during Read: %s", e.what() );
@@ -362,6 +362,7 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
     }
     else if ( path->component_str(0) == "commitChanges" )
     {
+        std::string moduleLoadPath = arg->asString()->value();
         try {
             if ( globals )
                 olc.updateEntry( *globals );
@@ -372,6 +373,23 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
                 olc.updateEntry(**j);
             }
             deleteableSchema.clear();
+            // If module should be loaded for database drivers, make sure that the module list covers all databases.
+            if (moduleLoadPath != "")
+            {
+                OlcModuleListEntry moduleListEntry = olc.getModuleListEntry();
+                moduleListEntry.setLoadPath(moduleLoadPath);
+                for (OlcDatabaseList::iterator db = databases.begin(); db != databases.end(); db++)
+                {
+                    std::string dbType = (*db)->getDatabaseType();
+                    if (dbType == "hdb" || dbType == "mdb" || dbType == "bdb")
+                    {
+                        moduleListEntry.addLoadModule("back_" + dbType + ".so");
+                    }
+                }
+                y2milestone("ldif: %s", moduleListEntry.toLdif().c_str());
+                olc.updateEntry(moduleListEntry);
+            }
+            // Continue adding new databases and modifying existing databases
             OlcDatabaseList::iterator i;
             for ( i = databases.begin(); i != databases.end() ; i++ )
             {
@@ -2144,36 +2162,55 @@ YCPBoolean SlapdConfigAgent::WriteSchema( const YCPPath &path,
     return YCPBoolean(false);
 }
 
-YCPString SlapdConfigAgent::ConfigToLdif() const
+YCPString SlapdConfigAgent::ConfigToLdif(std::string moduleLoadPath) const
 {
     y2milestone("ConfigToLdif");
-    std::ostringstream ldif;
+    std::ostringstream allLdif, globalLdif, moduleLdif, dbLdif;
     if ( ! globals )
     {
         throw std::runtime_error("Configuration not initialized. Can't create LDIF dump." );
     }
-    ldif << globals->toLdif() << std::endl;
+    // Global LDIF consists of daemon/authorization settings and schema definitions
+    globalLdif << globals->toLdif() << std::endl;
     if ( schemaBase )
     {
-        ldif << schemaBase->toLdif() << std::endl;
+        globalLdif << schemaBase->toLdif() << std::endl;
         OlcSchemaList::const_iterator j;
         for ( j = schema.begin(); j != schema.end() ; j++ )
         {
-            ldif << (*j)->toLdif() << std::endl;
+            globalLdif << (*j)->toLdif() << std::endl;
         }
     }
-    OlcDatabaseList::const_iterator i = databases.begin();
+    // Database LDIF consits of database type and index configuration
+    std::set<std::string> dbTypes;
+    OlcDatabaseList::const_iterator i = databases.cbegin();
     for ( ; i != databases.end(); i++ )
     {
-        ldif << (*i)->toLdif() << std::endl;
+        dbTypes.insert((*i)->getDatabaseType());
+        dbLdif << (*i)->toLdif() << std::endl;
         OlcOverlayList overlays = (*i)->getOverlays();
         OlcOverlayList::iterator k;
         for ( k = overlays.begin(); k != overlays.end(); k++ )
         {
-            ldif << (*k)->toLdif() << std::endl;
+            dbLdif << (*k)->toLdif() << std::endl;
         }
     }
-    return YCPString(ldif.str());
+    // Module LDIF loads database drivers in case they are not built into slapd executable
+    if (moduleLoadPath != "")
+    {
+        OlcModuleListEntry moduleEntry;
+        moduleEntry.setLoadPath(moduleLoadPath);
+        for (std::set<std::string>::iterator i = dbTypes.begin(); i != dbTypes.end(); i++)
+        {
+            if (*i == "hdb" || *i == "mdb" || *i == "bdb")
+            {
+                moduleEntry.addLoadModule("back_" + *i + ".so");
+            }
+        }
+        moduleLdif << moduleEntry.toLdif();
+    }
+    allLdif << globalLdif.str() << std::endl << moduleLdif.str() << std::endl << dbLdif.str() << std::endl;
+    return YCPString(allLdif.str());
 }
 
 static void initLdapParameters( const YCPValue &arg, std::string &targetUrl,

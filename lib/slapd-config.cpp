@@ -1651,6 +1651,26 @@ bool OlcDatabase::isBdbDatabase( const LDAPEntry& e )
     return false;
 }
 
+/*
+ * Return the type (frontent, config, hdb, bdb, mdb) of this database.
+ */
+std::string OlcDatabase::getDatabaseType()
+{
+    std::string attr = getStringValue("olcDatabase");
+    size_t closingBracket = attr.find_last_of('}');
+    if (closingBracket == std::string::npos)
+    {
+        // The value does not contain index, return as-is.
+        return attr;
+    }
+    else
+    {
+        // The value looks like {1234}mydb
+        // Strip index number from value
+        return attr.substr(closingBracket + 1, std::string::npos);
+    }
+}
+
 OlcDatabase* OlcDatabase::createFromLdapEntry( const LDAPEntry& e)
 {
     if ( OlcDatabase::isBdbDatabase( e ) )
@@ -2429,6 +2449,21 @@ OlcDatabaseList OlcConfig::getDatabases()
     return res;
 }
 
+OlcModuleListEntry OlcConfig::getModuleListEntry()
+{
+    if ( ! m_lc )
+    {
+        throw std::runtime_error("LDAP Connection not initialized");
+    }
+    try {
+        LDAPSearchResults *sr = m_lc->search( "cn=config", LDAPConnection::SEARCH_ONE, "objectclass=olcModuleList" );
+        return OlcModuleListEntry(*(sr->getNext()));
+    } catch (LDAPException e) {
+        log_it(SLAPD_LOG_INFO, e.getResultMsg() + " " + e.getServerMsg() );
+        throw;
+    }
+}
+
 OlcSchemaList OlcConfig::getSchemaNames()
 {
     OlcSchemaList res;
@@ -2468,3 +2503,40 @@ static void defaultLogCallback( int level, const std::string &msg,
 
 SlapdConfigLogCallback *OlcConfig::logCallback = defaultLogCallback;
 
+OlcModuleListEntry::OlcModuleListEntry()
+{
+    // olcModuleLoad entry has predefined CN
+    m_dbEntryChanged.setDN("cn=module{0},cn=config");
+    m_dbEntryChanged.addAttribute(LDAPAttribute("objectClass", "olcModuleList"));
+    m_dbEntryChanged.addAttribute(LDAPAttribute("cn", "module{0}"));
+}
+
+void OlcModuleListEntry::setLoadPath(const std::string& absPath)
+{
+    setStringValue("olcModulePath", absPath);
+}
+
+void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
+{
+    // Avoid adding a module if the file name is already present
+    StringList alreadyLoaded = getStringValues("olcModuleLoad");
+    for (StringList::const_iterator fileName = alreadyLoaded.begin(); fileName != alreadyLoaded.end(); fileName++)
+    {
+        // The file name value in LDAP entry may come with a prefix index number
+        size_t closingBracket = (*fileName).find_last_of('}');
+        if (closingBracket == std::string::npos)
+        {
+            // The value does not contain a prefix index number
+            if (*fileName == moduleFileName)
+            {
+                return;
+            }
+        }
+        else if ((*fileName).substr(closingBracket + 1, std::string::npos) == moduleFileName)
+        {
+            // The value contains a prefix index number
+            return;
+        }
+    }
+    addStringValue("olcModuleLoad", moduleFileName);
+}
