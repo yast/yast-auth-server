@@ -1667,7 +1667,7 @@ std::string OlcDatabase::getDatabaseType()
     {
         // The value looks like {1234}mydb
         // Strip index number from value
-        return attr.substr(closingBracket + 1, std::string::npos);
+        return attr.substr(closingBracket + 1);
     }
 }
 
@@ -2532,7 +2532,7 @@ void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
                 return;
             }
         }
-        else if ((*fileName).substr(closingBracket + 1, std::string::npos) == moduleFileName)
+        else if ((*fileName).substr(closingBracket + 1) == moduleFileName)
         {
             // The value contains a prefix index number
             return;

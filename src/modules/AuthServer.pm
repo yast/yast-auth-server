@@ -1593,7 +1593,14 @@ sub GetLoadModulePath {
     {
         if ($row =~ /Tumbleweed/)
         {
-            return '/usr/lib64/openldap';
+            if ((-e '/usr/lib64/openldap'))
+            {
+                return '/usr/lib64/openldap';
+            }
+            else
+            {
+                return '/usr/lib/openldap';
+            }
         }
     }
     # The January Tumbleweed update does not apply to SLES 12, the empty return string
