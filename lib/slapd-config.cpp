@@ -2456,8 +2456,16 @@ OlcModuleListEntry OlcConfig::getModuleListEntry()
         throw std::runtime_error("LDAP Connection not initialized");
     }
     try {
-        LDAPSearchResults *sr = m_lc->search( "cn=config", LDAPConnection::SEARCH_ONE, "objectclass=olcModuleList" );
-        return OlcModuleListEntry(*(sr->getNext()));
+        LDAPSearchResults *sr = m_lc->search("cn=config", LDAPConnection::SEARCH_ONE, "objectclass=" + OlcModuleListEntry::OBJECT_CLASS);
+        LDAPEntry *moduleList = sr->getNext();
+        if (moduleList)
+        {
+            return OlcModuleListEntry(*moduleList);
+        }
+        else
+        {
+            return OlcModuleListEntry();
+        }
     } catch (LDAPException e) {
         log_it(SLAPD_LOG_INFO, e.getResultMsg() + " " + e.getServerMsg() );
         throw;
@@ -2503,19 +2511,25 @@ static void defaultLogCallback( int level, const std::string &msg,
 
 SlapdConfigLogCallback *OlcConfig::logCallback = defaultLogCallback;
 
+const std::string OlcModuleListEntry::DN = "cn=module{0},cn=config";
+const std::string OlcModuleListEntry::CN = "module{0}";
+const std::string OlcModuleListEntry::OBJECT_CLASS = "olcModuleList";
+
 OlcModuleListEntry::OlcModuleListEntry()
 {
     // olcModuleLoad entry has predefined CN
-    m_dbEntryChanged.setDN("cn=module{0},cn=config");
-    m_dbEntryChanged.addAttribute(LDAPAttribute("objectClass", "olcModuleList"));
-    m_dbEntryChanged.addAttribute(LDAPAttribute("cn", "module{0}"));
+    m_dbEntryChanged.setDN(DN);
+    m_dbEntryChanged.addAttribute(LDAPAttribute("objectClass", OBJECT_CLASS));
+    m_dbEntryChanged.addAttribute(LDAPAttribute("cn", CN));
 }
 
+// Set the search path for modules.
 void OlcModuleListEntry::setLoadPath(const std::string& absPath)
 {
     setStringValue("olcModulePath", absPath);
 }
 
+// Add an olcModuleLoad entry. Will not repeat an entry if it already exists.
 void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
 {
     // Avoid adding a module if the file name is already present
@@ -2539,4 +2553,13 @@ void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
         }
     }
     addStringValue("olcModuleLoad", moduleFileName);
+}
+
+// Add hdb, mdb, bdb, and synproc into module list.
+void OlcModuleListEntry::addEssentialModules()
+{
+    addLoadModule("back_bdb.so");
+    addLoadModule("back_mdb.so");
+    addLoadModule("back_hdb.so");
+    addLoadModule("syncprov.so");
 }

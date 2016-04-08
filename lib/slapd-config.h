@@ -100,9 +100,11 @@ class OlcConfigEntry
 class OlcModuleListEntry: public OlcConfigEntry
 {
 public:
+    static const std::string DN, CN, OBJECT_CLASS;
     OlcModuleListEntry();
     OlcModuleListEntry(const LDAPEntry& le): OlcConfigEntry(le) {};
     void setLoadPath(const std::string& absPath);
+    void addEssentialModules();
     void addLoadModule(const std::string& moduleFileName);
 };
 

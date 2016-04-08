@@ -378,15 +378,8 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
             {
                 OlcModuleListEntry moduleListEntry = olc.getModuleListEntry();
                 moduleListEntry.setLoadPath(moduleLoadPath);
-                for (OlcDatabaseList::iterator db = databases.begin(); db != databases.end(); db++)
-                {
-                    std::string dbType = (*db)->getDatabaseType();
-                    if (dbType == "hdb" || dbType == "mdb" || dbType == "bdb")
-                    {
-                        moduleListEntry.addLoadModule("back_" + dbType + ".so");
-                    }
-                }
-                y2milestone("ldif: %s", moduleListEntry.toLdif().c_str());
+                moduleListEntry.addEssentialModules();
+                y2milestone("olcModuleList: %s", moduleListEntry.toLdif().c_str());
                 olc.updateEntry(moduleListEntry);
             }
             // Continue adding new databases and modifying existing databases
@@ -427,6 +420,7 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
     }
     else if ( path->component_str(0) == "dumpConfDb" )
     {
+        std::string moduleLoadPath = arg->asString()->value();
         try {
             StringList attrs;
             attrs.add("*");
@@ -440,11 +434,38 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
             attrs.add("contextCSN");
             LDAPSearchResults *sr = m_lc->search( "cn=config", LDAPConnection::SEARCH_SUB,
                                                   "objectclass=*", attrs );
-            std::ostringstream ldifStream;
-            LdifWriter ldif(ldifStream);
-            while ( LDAPEntry *e = sr->getNext() )
+            std::vector<LDAPEntry> searchResult;
+            while (LDAPEntry *e = sr->getNext())
             {
-                ldif.writeRecord( *e );
+                searchResult.push_back(LDAPEntry(*e));
+            }
+            // Explicitly load syncprov.so and DB drivers if modules should be loaded explicitly
+            OlcModuleListEntry moduleListEntry;
+            if (moduleLoadPath != "")
+            {
+                for (std::vector<LDAPEntry>::iterator it = searchResult.begin(); it < searchResult.end(); it++)
+                {
+                    // Look for OlcModuleList and remove its LDAPEntry from result
+                    if ((*it).getDN() == OlcModuleListEntry::DN)
+                    {
+                        moduleListEntry = OlcModuleListEntry(*it);
+                        it = searchResult.erase(it);
+                    }
+                }
+                moduleListEntry.addEssentialModules();
+                moduleListEntry.setLoadPath(moduleLoadPath);
+            }
+            // Convert LDAP entries into one LDIF string
+            std::ostringstream ldifStream;
+            LdifWriter entryToLdif(ldifStream);
+            for (std::vector<LDAPEntry>::iterator it = searchResult.begin(); it < searchResult.end(); it++)
+            {
+                // Place OlcModuleList above config database
+                if ((*it).getDN() == "olcDatabase={0}config,cn=config")
+                {
+                    ldifStream << std::endl << moduleListEntry.toLdif() << std::endl;
+                }
+                entryToLdif.writeRecord(*it);
             }
             return YCPString( ldifStream.str() );
         } catch ( LDAPException e ) {
@@ -2182,11 +2203,9 @@ YCPString SlapdConfigAgent::ConfigToLdif(std::string moduleLoadPath) const
         }
     }
     // Database LDIF consits of database type and index configuration
-    std::set<std::string> dbTypes;
     OlcDatabaseList::const_iterator i = databases.cbegin();
     for ( ; i != databases.end(); i++ )
     {
-        dbTypes.insert((*i)->getDatabaseType());
         dbLdif << (*i)->toLdif() << std::endl;
         OlcOverlayList overlays = (*i)->getOverlays();
         OlcOverlayList::iterator k;
@@ -2200,13 +2219,7 @@ YCPString SlapdConfigAgent::ConfigToLdif(std::string moduleLoadPath) const
     {
         OlcModuleListEntry moduleEntry;
         moduleEntry.setLoadPath(moduleLoadPath);
-        for (std::set<std::string>::iterator i = dbTypes.begin(); i != dbTypes.end(); i++)
-        {
-            if (*i == "hdb" || *i == "mdb" || *i == "bdb")
-            {
-                moduleEntry.addLoadModule("back_" + *i + ".so");
-            }
-        }
+        moduleEntry.addEssentialModules();
         moduleLdif << moduleEntry.toLdif();
     }
     allLdif << globalLdif.str() << std::endl << moduleLdif.str() << std::endl << dbLdif.str() << std::endl;

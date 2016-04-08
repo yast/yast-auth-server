@@ -4734,7 +4734,7 @@ sub SetupRemoteForReplication
     }
     y2milestone("Updating remote configuration");
     SCR->Execute(".ldapserver.commitChanges", GetLoadModulePath );
-    $masterldif = SCR->Execute(".ldapserver.dumpConfDb" );
+    $masterldif = SCR->Execute(".ldapserver.dumpConfDb", GetLoadModulePath);
     SCR->Execute(".ldapserver.reset" );
     
     $globals_initialized = 0;
