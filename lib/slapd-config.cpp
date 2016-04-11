@@ -140,6 +140,23 @@ OlcConfigEntry* OlcConfigEntry::createFromLdapEntry( const LDAPEntry& e )
     }
 }
 
+// Return the LDAP entry with index number stripped.
+std::string OlcConfigEntry::stripIndexFromLdapValue(const std::string& ldapValue)
+{
+    size_t closingBracket = ldapValue.find_last_of('}');
+    if (closingBracket == std::string::npos)
+    {
+        // The value does not contain index, return as-is.
+        return ldapValue;
+    }
+    else
+    {
+        // The value looks like {1234}mydb
+        // Strip index number from value
+        return ldapValue.substr(closingBracket + 1);
+    }
+}
+
 void OlcConfigEntry::setIndex( int index, bool origEntry )
 {
     this->entryIndex = index;
@@ -1657,18 +1674,7 @@ bool OlcDatabase::isBdbDatabase( const LDAPEntry& e )
 std::string OlcDatabase::getDatabaseType()
 {
     std::string attr = getStringValue("olcDatabase");
-    size_t closingBracket = attr.find_last_of('}');
-    if (closingBracket == std::string::npos)
-    {
-        // The value does not contain index, return as-is.
-        return attr;
-    }
-    else
-    {
-        // The value looks like {1234}mydb
-        // Strip index number from value
-        return attr.substr(closingBracket + 1);
-    }
+    return stripIndexFromLdapValue(attr);
 }
 
 OlcDatabase* OlcDatabase::createFromLdapEntry( const LDAPEntry& e)
@@ -2458,14 +2464,7 @@ OlcModuleListEntry OlcConfig::getModuleListEntry()
     try {
         LDAPSearchResults *sr = m_lc->search("cn=config", LDAPConnection::SEARCH_ONE, "objectclass=" + OlcModuleListEntry::OBJECT_CLASS);
         LDAPEntry *moduleList = sr->getNext();
-        if (moduleList)
-        {
-            return OlcModuleListEntry(*moduleList);
-        }
-        else
-        {
-            return OlcModuleListEntry();
-        }
+        return moduleList ? OlcModuleListEntry(*moduleList) : OlcModuleListEntry();
     } catch (LDAPException e) {
         log_it(SLAPD_LOG_INFO, e.getResultMsg() + " " + e.getServerMsg() );
         throw;
@@ -2536,26 +2535,15 @@ void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
     StringList alreadyLoaded = getStringValues("olcModuleLoad");
     for (StringList::const_iterator fileName = alreadyLoaded.begin(); fileName != alreadyLoaded.end(); fileName++)
     {
-        // The file name value in LDAP entry may come with a prefix index number
-        size_t closingBracket = (*fileName).find_last_of('}');
-        if (closingBracket == std::string::npos)
+        if (stripIndexFromLdapValue(*fileName) == moduleFileName)
         {
-            // The value does not contain a prefix index number
-            if (*fileName == moduleFileName)
-            {
-                return;
-            }
-        }
-        else if ((*fileName).substr(closingBracket + 1) == moduleFileName)
-        {
-            // The value contains a prefix index number
             return;
         }
     }
     addStringValue("olcModuleLoad", moduleFileName);
 }
 
-// Add hdb, mdb, bdb, and synproc into module list.
+// Add hdb, mdb, bdb, and synproc into module list (for Tumbleweed since January 2016).
 void OlcModuleListEntry::addEssentialModules()
 {
     addLoadModule("back_bdb.so");

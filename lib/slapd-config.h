@@ -38,6 +38,7 @@ class OlcConfigEntry
         static bool isScheamEntry( const LDAPEntry& le);
         static bool isOverlayEntry( const LDAPEntry& le);
         static bool isGlobalEntry( const LDAPEntry& le);
+        static std::string stripIndexFromLdapValue(const std::string& ldapValue);
 
         inline OlcConfigEntry() : m_dbEntry(), m_dbEntryChanged() {}
         inline OlcConfigEntry(const LDAPEntry& le) : m_dbEntry(le), m_dbEntryChanged(le) {}

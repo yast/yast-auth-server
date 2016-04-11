@@ -67,7 +67,7 @@ class SlapdConfigAgent : public SCRAgent {
         YCPBoolean WriteSchema( const YCPPath &path,
                              const YCPValue &arg = YCPNull(),
                              const YCPValue &opt = YCPNull());
-        YCPString ConfigToLdif(std::string moduleLoadPath) const;
+        YCPString ConfigToLdif() const;
         bool remoteBindCheck( const YCPValue &arg );
         bool remoteSyncCheck( const YCPValue &arg );
         void startTlsCheck( LDAPConnection &c);
@@ -89,6 +89,7 @@ class SlapdConfigAgent : public SCRAgent {
         std::list<std::string> deleteableSchema; 
         boost::shared_ptr<OlcGlobalConfig> globals;
         boost::shared_ptr<OlcSchemaConfig> schemaBase;
+        static const std::string getOlcModuleLoadPath();
 };
 
 #endif /* _SlapdConfigAgent_h */

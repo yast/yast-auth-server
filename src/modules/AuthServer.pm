@@ -1582,32 +1582,6 @@ sub WriteServiceSettings {
     return 1;
 }
 
-# If the system is openSUSE Tumbleweed, return '/usr/lib64/openldap'.
-# Otherwise, return an empty string.
-sub GetLoadModulePath {
-    # In early January 2016, OpenLDAP on Tumbleweed was updated to no longer bunble
-    # database drivers in the slapd binary itself.
-    # Hence, the database drivers (bdb/mdb/hdb) must be explicitly loaded for Tumbleweed users.
-    open(my $osr, '<', '/etc/os-release');
-    while (my $row = <$osr>)
-    {
-        if ($row =~ /Tumbleweed/)
-        {
-            if ((-e '/usr/lib64/openldap'))
-            {
-                return '/usr/lib64/openldap';
-            }
-            else
-            {
-                return '/usr/lib/openldap';
-            }
-        }
-    }
-    # The January Tumbleweed update does not apply to SLES 12, the empty return string
-    # tells SlapdConfigAgent not to load DB drivers explicitly.
-    return '';
-}
-
 ##
  # Write all ldap-server settings
  # @return true on success
@@ -1690,7 +1664,7 @@ sub Write {
             }
             else
             {
-                $ldif = SCR->Read('.ldapserver.configAsLdif', GetLoadModulePath);
+                $ldif = SCR->Read('.ldapserver.configAsLdif');
             }
             y2debug($ldif);
             if ( ! $ldif )
@@ -1935,7 +1909,7 @@ sub Write {
         Progress->set($progress_orig);
         Progress->NextStage();
 
-        if( ! SCR->Execute('.ldapserver.commitChanges', GetLoadModulePath) )
+        if( ! SCR->Execute('.ldapserver.commitChanges') )
         {
             my $err = SCR->Error(".ldapserver");
             y2error($err->{'summary'}." ".$err->{'description'});
@@ -2115,7 +2089,7 @@ sub Import {
     $defaultIndexes = $defIdxBak;
     $defaultDbAcls = $defAclBak;
 
-    my $ldif = SCR->Read('.ldapserver.configAsLdif', GetLoadModulePath);
+    my $ldif = SCR->Read('.ldapserver.configAsLdif');
     y2debug($ldif);
     return 1;
 }
@@ -3889,7 +3863,7 @@ sub RemoveMMSyncrepl
             SCR->Write(".ldapserver.database.{".$i."}.mirrormode", YaST::YCP::Boolean(0) );
         }
     }
-    SCR->Execute(".ldapserver.commitChanges", GetLoadModulePath );
+    SCR->Execute(".ldapserver.commitChanges");
 
     return YaST::YCP::Boolean(1);
 }
@@ -4733,8 +4707,8 @@ sub SetupRemoteForReplication
         }
     }
     y2milestone("Updating remote configuration");
-    SCR->Execute(".ldapserver.commitChanges", GetLoadModulePath );
-    $masterldif = SCR->Execute(".ldapserver.dumpConfDb", GetLoadModulePath);
+    SCR->Execute(".ldapserver.commitChanges");
+    $masterldif = SCR->Execute(".ldapserver.dumpConfDb");
     SCR->Execute(".ldapserver.reset" );
     
     $globals_initialized = 0;
