@@ -1,9 +1,10 @@
 -------------------------------------------------------------------
 Fri Apr  8 12:12:45 UTC 2016 - hguo@suse.com
 
-- Adept to the latest changes in Tumbleweed to load essential
-  database driver and syncprov modules.
-  Bump version to 3.1.16.
+- The recent OpenLDAP upgrade in Tumbleweed no longer loads DB
+  drivers and essential modules by default, hence adapting to that
+  by explicitly loading them. Bump version to 3.1.16.
+  Address bsc#959760 bsc#964924.
 
 -------------------------------------------------------------------
 Tue Jun 30 05:46:47 UTC 2015 - mfilka@suse.com
