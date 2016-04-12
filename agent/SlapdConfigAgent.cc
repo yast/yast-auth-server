@@ -1,4 +1,6 @@
 #include "SlapdConfigAgent.h"
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <LDAPConnection.h>
 #include <LDAPException.h>
 #include <LdifReader.h>
@@ -73,6 +75,46 @@ SlapdConfigAgent::~SlapdConfigAgent()
     {
         delete(m_lc);
     }
+}
+
+// If system is tumbleweed, return /usr/lib(64)/openldap. Otherwise return empty string.
+const std::string SlapdConfigAgent::getOlcModuleLoadPath()
+{
+    /*
+     * In late January 2016, OpenLDAP on Tumbleweed was updated to exclude
+     * DB and syncprov overlay drivers from the main executable. They will have
+     * to be dynamically loaded from modules' directory.
+     * This function helps to determine location of the directory, depending
+     * on /etc/os-release.
+     * SLES and Leap are not affected.
+     */
+    ifstream osRelease("/etc/os-release");
+    if (!osRelease.is_open())
+    {
+        y2error("Failed to open /etc/os-release");
+        throw std::runtime_error("Failed to open /etc/os-release");
+    }
+    bool isTumbleweed;
+    string osrLine;
+    while (getline(osRelease, osrLine))
+    {
+        if (osrLine.find("Tumbleweed") != std::string::npos)
+        {
+            isTumbleweed = true;
+            break;
+        }
+    }
+    osRelease.close();
+    if (!isTumbleweed)
+    {
+        return "";
+    }
+    struct stat testExistence;
+    if (stat("/usr/lib64/openldap", &testExistence) == 0)
+    {
+        return "/usr/lib64/openldap";
+    }
+    return "/usr/lib/openldap";
 }
 
 YCPValue SlapdConfigAgent::Read( const YCPPath &path,
@@ -372,6 +414,17 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
                 olc.updateEntry(**j);
             }
             deleteableSchema.clear();
+            // If module should be loaded for database drivers, make sure that the module list covers all databases.
+            std::string moduleLoadPath = getOlcModuleLoadPath();
+            if (moduleLoadPath != "")
+            {
+                OlcModuleListEntry moduleListEntry = olc.getModuleListEntry();
+                moduleListEntry.setLoadPath(moduleLoadPath);
+                moduleListEntry.addEssentialModules();
+                y2milestone("olcModuleList: %s", moduleListEntry.toLdif().c_str());
+                olc.updateEntry(moduleListEntry);
+            }
+            // Continue adding new databases and modifying existing databases
             OlcDatabaseList::iterator i;
             for ( i = databases.begin(); i != databases.end() ; i++ )
             {
@@ -422,11 +475,38 @@ YCPValue SlapdConfigAgent::Execute( const YCPPath &path,
             attrs.add("contextCSN");
             LDAPSearchResults *sr = m_lc->search( "cn=config", LDAPConnection::SEARCH_SUB,
                                                   "objectclass=*", attrs );
-            std::ostringstream ldifStream;
-            LdifWriter ldif(ldifStream);
-            while ( LDAPEntry *e = sr->getNext() )
+            std::vector<LDAPEntry> searchResult;
+            while (LDAPEntry *e = sr->getNext())
             {
-                ldif.writeRecord( *e );
+                searchResult.push_back(LDAPEntry(*e));
+            }
+            OlcModuleListEntry moduleListEntry;
+            std::string moduleLoadPath = getOlcModuleLoadPath();
+            if (moduleLoadPath != "")
+            {
+                // Modify olcModuleLoadPath to load DB drivers and syncprov.so
+                for (std::vector<LDAPEntry>::iterator it = searchResult.begin(); it < searchResult.end(); it++)
+                {
+                    if ((*it).getDN() == OlcModuleListEntry::DN)
+                    {
+                        moduleListEntry = OlcModuleListEntry(*it);
+                        it = searchResult.erase(it);
+                    }
+                }
+                moduleListEntry.addEssentialModules();
+                moduleListEntry.setLoadPath(moduleLoadPath);
+            }
+            // Convert LDAP entries into one LDIF string
+            std::ostringstream ldifStream;
+            LdifWriter entryToLdif(ldifStream);
+            for (std::vector<LDAPEntry>::iterator it = searchResult.begin(); it < searchResult.end(); it++)
+            {
+                // Place OlcModuleList above config database, per OpenLDAP convention.
+                if (moduleLoadPath != "" && (*it).getDN() == "olcDatabase={0}config,cn=config")
+                {
+                    ldifStream << std::endl << moduleListEntry.toLdif() << std::endl;
+                }
+                entryToLdif.writeRecord(*it);
             }
             return YCPString( ldifStream.str() );
         } catch ( LDAPException e ) {
@@ -2147,33 +2227,45 @@ YCPBoolean SlapdConfigAgent::WriteSchema( const YCPPath &path,
 YCPString SlapdConfigAgent::ConfigToLdif() const
 {
     y2milestone("ConfigToLdif");
-    std::ostringstream ldif;
+    std::ostringstream allLdif, globalLdif, moduleLdif, dbLdif;
     if ( ! globals )
     {
         throw std::runtime_error("Configuration not initialized. Can't create LDIF dump." );
     }
-    ldif << globals->toLdif() << std::endl;
+    // Global LDIF consists of daemon/authorization settings and schema definitions
+    globalLdif << globals->toLdif() << std::endl;
     if ( schemaBase )
     {
-        ldif << schemaBase->toLdif() << std::endl;
+        globalLdif << schemaBase->toLdif() << std::endl;
         OlcSchemaList::const_iterator j;
         for ( j = schema.begin(); j != schema.end() ; j++ )
         {
-            ldif << (*j)->toLdif() << std::endl;
+            globalLdif << (*j)->toLdif() << std::endl;
         }
     }
-    OlcDatabaseList::const_iterator i = databases.begin();
+    // Database LDIF consits of database type and index configuration
+    OlcDatabaseList::const_iterator i = databases.cbegin();
     for ( ; i != databases.end(); i++ )
     {
-        ldif << (*i)->toLdif() << std::endl;
+        dbLdif << (*i)->toLdif() << std::endl;
         OlcOverlayList overlays = (*i)->getOverlays();
         OlcOverlayList::iterator k;
         for ( k = overlays.begin(); k != overlays.end(); k++ )
         {
-            ldif << (*k)->toLdif() << std::endl;
+            dbLdif << (*k)->toLdif() << std::endl;
         }
     }
-    return YCPString(ldif.str());
+    // Module LDIF loads database drivers in case they are not built into slapd executable
+    std::string moduleLoadPath = getOlcModuleLoadPath();
+    if (moduleLoadPath != "")
+    {
+        OlcModuleListEntry moduleEntry;
+        moduleEntry.setLoadPath(moduleLoadPath);
+        moduleEntry.addEssentialModules();
+        moduleLdif << moduleEntry.toLdif();
+    }
+    allLdif << globalLdif.str() << std::endl << moduleLdif.str() << std::endl << dbLdif.str() << std::endl;
+    return YCPString(allLdif.str());
 }
 
 static void initLdapParameters( const YCPValue &arg, std::string &targetUrl,

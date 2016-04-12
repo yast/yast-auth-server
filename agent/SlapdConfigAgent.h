@@ -89,6 +89,7 @@ class SlapdConfigAgent : public SCRAgent {
         std::list<std::string> deleteableSchema; 
         boost::shared_ptr<OlcGlobalConfig> globals;
         boost::shared_ptr<OlcSchemaConfig> schemaBase;
+        static const std::string getOlcModuleLoadPath();
 };
 
 #endif /* _SlapdConfigAgent_h */

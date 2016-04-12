@@ -38,6 +38,7 @@ class OlcConfigEntry
         static bool isScheamEntry( const LDAPEntry& le);
         static bool isOverlayEntry( const LDAPEntry& le);
         static bool isGlobalEntry( const LDAPEntry& le);
+        static std::string stripIndexFromLdapValue(const std::string& ldapValue);
 
         inline OlcConfigEntry() : m_dbEntry(), m_dbEntryChanged() {}
         inline OlcConfigEntry(const LDAPEntry& le) : m_dbEntry(le), m_dbEntryChanged(le) {}
@@ -94,6 +95,18 @@ class OlcConfigEntry
         LDAPEntry m_dbEntryChanged;
 
         static const std::list<std::string> orderedAttrs;
+};
+
+// OpenLDAP's mechanism to implement dynamic module loading, useful for loading LDAP database drivers.
+class OlcModuleListEntry: public OlcConfigEntry
+{
+public:
+    static const std::string DN, CN, OBJECT_CLASS;
+    OlcModuleListEntry();
+    OlcModuleListEntry(const LDAPEntry& le): OlcConfigEntry(le) {};
+    void setLoadPath(const std::string& absPath);
+    void addEssentialModules();
+    void addLoadModule(const std::string& moduleFileName);
 };
 
 enum IndexType {
@@ -398,6 +411,7 @@ class OlcDatabase : public OlcConfigEntry
 
         void addOverlay(boost::shared_ptr<OlcOverlay> overlay);
         OlcOverlayList& getOverlays() ;
+        std::string getDatabaseType();
 
     protected:
         virtual void resetMemberAttrs();
@@ -526,6 +540,7 @@ class OlcConfig {
         boost::shared_ptr<OlcGlobalConfig> getGlobals();
         OlcDatabaseList getDatabases();
         OlcSchemaList getSchemaNames();
+        OlcModuleListEntry getModuleListEntry();
 
         void setGlobals( OlcGlobalConfig &olcg);
         void updateEntry( OlcConfigEntry &oce );

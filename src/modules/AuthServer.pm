@@ -1909,7 +1909,7 @@ sub Write {
         Progress->set($progress_orig);
         Progress->NextStage();
 
-        if( ! SCR->Execute('.ldapserver.commitChanges' ) )
+        if( ! SCR->Execute('.ldapserver.commitChanges') )
         {
             my $err = SCR->Error(".ldapserver");
             y2error($err->{'summary'}." ".$err->{'description'});
@@ -2089,7 +2089,7 @@ sub Import {
     $defaultIndexes = $defIdxBak;
     $defaultDbAcls = $defAclBak;
 
-    my $ldif = SCR->Read('.ldapserver.configAsLdif' );
+    my $ldif = SCR->Read('.ldapserver.configAsLdif');
     y2debug($ldif);
     return 1;
 }
@@ -3863,7 +3863,7 @@ sub RemoveMMSyncrepl
             SCR->Write(".ldapserver.database.{".$i."}.mirrormode", YaST::YCP::Boolean(0) );
         }
     }
-    SCR->Execute(".ldapserver.commitChanges" );
+    SCR->Execute(".ldapserver.commitChanges");
 
     return YaST::YCP::Boolean(1);
 }
@@ -4707,8 +4707,8 @@ sub SetupRemoteForReplication
         }
     }
     y2milestone("Updating remote configuration");
-    SCR->Execute(".ldapserver.commitChanges" );
-    $masterldif = SCR->Execute(".ldapserver.dumpConfDb" );
+    SCR->Execute(".ldapserver.commitChanges");
+    $masterldif = SCR->Execute(".ldapserver.dumpConfDb");
     SCR->Execute(".ldapserver.reset" );
     
     $globals_initialized = 0;

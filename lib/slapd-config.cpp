@@ -140,6 +140,23 @@ OlcConfigEntry* OlcConfigEntry::createFromLdapEntry( const LDAPEntry& e )
     }
 }
 
+// Return the LDAP entry with index number stripped.
+std::string OlcConfigEntry::stripIndexFromLdapValue(const std::string& ldapValue)
+{
+    size_t closingBracket = ldapValue.find_last_of('}');
+    if (closingBracket == std::string::npos)
+    {
+        // The value does not contain index, return as-is.
+        return ldapValue;
+    }
+    else
+    {
+        // The value looks like {1234}mydb
+        // Strip index number from value
+        return ldapValue.substr(closingBracket + 1);
+    }
+}
+
 void OlcConfigEntry::setIndex( int index, bool origEntry )
 {
     this->entryIndex = index;
@@ -1651,6 +1668,15 @@ bool OlcDatabase::isBdbDatabase( const LDAPEntry& e )
     return false;
 }
 
+/*
+ * Return the type (frontent, config, hdb, bdb, mdb) of this database.
+ */
+std::string OlcDatabase::getDatabaseType()
+{
+    std::string attr = getStringValue("olcDatabase");
+    return stripIndexFromLdapValue(attr);
+}
+
 OlcDatabase* OlcDatabase::createFromLdapEntry( const LDAPEntry& e)
 {
     if ( OlcDatabase::isBdbDatabase( e ) )
@@ -2429,6 +2455,22 @@ OlcDatabaseList OlcConfig::getDatabases()
     return res;
 }
 
+OlcModuleListEntry OlcConfig::getModuleListEntry()
+{
+    if ( ! m_lc )
+    {
+        throw std::runtime_error("LDAP Connection not initialized");
+    }
+    try {
+        LDAPSearchResults *sr = m_lc->search("cn=config", LDAPConnection::SEARCH_ONE, "objectclass=" + OlcModuleListEntry::OBJECT_CLASS);
+        LDAPEntry *moduleList = sr->getNext();
+        return moduleList ? OlcModuleListEntry(*moduleList) : OlcModuleListEntry();
+    } catch (LDAPException e) {
+        log_it(SLAPD_LOG_INFO, e.getResultMsg() + " " + e.getServerMsg() );
+        throw;
+    }
+}
+
 OlcSchemaList OlcConfig::getSchemaNames()
 {
     OlcSchemaList res;
@@ -2468,3 +2510,44 @@ static void defaultLogCallback( int level, const std::string &msg,
 
 SlapdConfigLogCallback *OlcConfig::logCallback = defaultLogCallback;
 
+const std::string OlcModuleListEntry::DN = "cn=module{0},cn=config";
+const std::string OlcModuleListEntry::CN = "module{0}";
+const std::string OlcModuleListEntry::OBJECT_CLASS = "olcModuleList";
+
+OlcModuleListEntry::OlcModuleListEntry()
+{
+    // olcModuleLoad entry has predefined CN
+    m_dbEntryChanged.setDN(DN);
+    m_dbEntryChanged.addAttribute(LDAPAttribute("objectClass", OBJECT_CLASS));
+    m_dbEntryChanged.addAttribute(LDAPAttribute("cn", CN));
+}
+
+// Set the search path for modules.
+void OlcModuleListEntry::setLoadPath(const std::string& absPath)
+{
+    setStringValue("olcModulePath", absPath);
+}
+
+// Add an olcModuleLoad entry. Will not repeat an entry if it already exists.
+void OlcModuleListEntry::addLoadModule(const std::string& moduleFileName)
+{
+    // Avoid adding a module if the file name is already present
+    StringList alreadyLoaded = getStringValues("olcModuleLoad");
+    for (StringList::const_iterator fileName = alreadyLoaded.begin(); fileName != alreadyLoaded.end(); fileName++)
+    {
+        if (stripIndexFromLdapValue(*fileName) == moduleFileName)
+        {
+            return;
+        }
+    }
+    addStringValue("olcModuleLoad", moduleFileName);
+}
+
+// Add hdb, mdb, bdb, and synproc into module list (for Tumbleweed since January 2016).
+void OlcModuleListEntry::addEssentialModules()
+{
+    addLoadModule("back_bdb.so");
+    addLoadModule("back_mdb.so");
+    addLoadModule("back_hdb.so");
+    addLoadModule("syncprov.so");
+}
