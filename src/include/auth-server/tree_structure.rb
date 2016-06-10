@@ -392,20 +392,9 @@ module Yast
         UI.ChangeWidget(:cb_tls_enabled, :Value, true)
         UI.ChangeWidget(:cb_ssl_listener_enabled, :Enabled, true)
 
-        if Ops.get_string(tls, "caCertFile", "") == "/etc/pki/trust/anchors/YaST-CA.pem" &&
-            Ops.get_string(tls, "certFile", "") ==
-              "/etc/ssl/servercerts/servercert.pem" &&
-            Ops.get_string(tls, "certKeyFile", "") ==
-              "/etc/ssl/servercerts/serverkey.pem"
-          UI.ChangeWidget(:cb_use_common_cert, :Value, true)
-          UI.ChangeWidget(:fr_import_cert, :Enabled, false)
-        else
-          UI.ChangeWidget(:cb_use_common_cert, :Value, false)
-          UI.ChangeWidget(:fr_import_cert, :Enabled, true)
-        end
+        UI.ChangeWidget(:fr_import_cert, :Enabled, true)
       else
         UI.ChangeWidget(:cb_ssl_listener_enabled, :Enabled, false)
-        UI.ChangeWidget(:cb_use_common_cert, :Enabled, false)
         UI.ChangeWidget(:fr_import_cert, :Enabled, false)
       end
       UI.ChangeWidget(
@@ -501,8 +490,6 @@ module Yast
     def cb_input_tls
       Builtins.y2milestone("calling tls input handler")
 
-      common_cert_available = AuthServer.HaveCommonServerCertificate
-
       if @handler_cmd == :cb_tls_enabled
         tls_enabled_cb = Convert.to_boolean(
           UI.QueryWidget(:cb_tls_enabled, :Value)
@@ -510,54 +497,10 @@ module Yast
         if tls_enabled_cb
           UI.ChangeWidget(:cb_ssl_listener_enabled, :Enabled, true)
           UI.ChangeWidget(:cb_ssl_listener_enabled, :Value, true)
-          if common_cert_available
-            UI.ChangeWidget(:cb_use_common_cert, :Enabled, true)
-            UI.ChangeWidget(:cb_use_common_cert, :Value, true)
-            UI.ChangeWidget(:te_ca_file, :Value, "/etc/pki/trust/anchors/YaST-CA.pem")
-            UI.ChangeWidget(
-              :te_cert_file,
-              :Value,
-              "/etc/ssl/servercerts/servercert.pem"
-            )
-            UI.ChangeWidget(
-              :te_key_file,
-              :Value,
-              "/etc/ssl/servercerts/serverkey.pem"
-            )
-            UI.ChangeWidget(:fr_import_cert, :Enabled, false)
-          else
-            UI.ChangeWidget(:fr_import_cert, :Enabled, true)
-          end
+          UI.ChangeWidget(:fr_import_cert, :Enabled, true)
         else
           UI.ChangeWidget(:cb_ssl_listener_enabled, :Enabled, false)
-          UI.ChangeWidget(:cb_use_common_cert, :Enabled, false)
           UI.ChangeWidget(:fr_import_cert, :Enabled, false)
-        end
-      elsif @handler_cmd == :cb_use_common_cert
-        use_common_cert = Convert.to_boolean(
-          UI.QueryWidget(:cb_use_common_cert, :Value)
-        )
-        if use_common_cert
-          if common_cert_available
-            UI.ChangeWidget(:te_ca_file, :Value, "/etc/pki/trust/anchors/YaST-CA.pem")
-            UI.ChangeWidget(
-              :te_cert_file,
-              :Value,
-              "/etc/ssl/servercerts/servercert.pem"
-            )
-            UI.ChangeWidget(
-              :te_key_file,
-              :Value,
-              "/etc/ssl/servercerts/serverkey.pem"
-            )
-            UI.ChangeWidget(:fr_import_cert, :Enabled, false)
-          else
-            Popup.Error(_("A common server certificate is not available."))
-            UI.ChangeWidget(:cb_use_common_cert, :Value, false)
-            UI.ChangeWidget(:cb_use_common_cert, :Enabled, false)
-          end
-        else
-          UI.ChangeWidget(:fr_import_cert, :Enabled, true)
         end
       elsif @handler_cmd == :pb_ca_file
         # file selection headline
@@ -583,9 +526,6 @@ module Yast
           _("Select Certificate Key File")
         )
         UI.ChangeWidget(:te_key_file, :Value, name) if name != nil
-      elsif @handler_cmd == :pb_launch_ca
-        WFM.CallFunction("ca_mgm", [])
-        cb_read_tls
       end
       #reread tls page
       true

@@ -339,17 +339,6 @@ module Yast
           Ops.set(@ldapclient_defaults, "file_server", true)
           Ops.set(@ldapclient_defaults, "create_ldap", true)
 
-          if !AuthServer.HaveCommonServerCertificate
-            Report.Error(
-              _(
-                "OpenLDAP Server: Common server certificate not available.\nStartTLS is disabled."
-              )
-            )
-          else
-            Ops.set(@ldapclient_defaults, "ldap_tls", true)
-            AuthServer.WriteTlsConfigCommonCert
-          end
-
           Ldap.SetDefaults(@ldapclient_defaults)
           Ldap.SetBindPassword(Ops.get_string(@defaults, "rootpw_clear", ""))
           AuthServer.WriteSLPEnabled(

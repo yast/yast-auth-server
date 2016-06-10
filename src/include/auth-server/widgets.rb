@@ -235,14 +235,6 @@ module Yast
                     false
                   )
                 ),
-                Left(
-                  CheckBox(
-                    Id(:cb_use_common_cert),
-                    Opt(:notify),
-                    _("Use common Server Certificate"),
-                    false
-                  )
-                ),
                 HStretch()
               )
             )
