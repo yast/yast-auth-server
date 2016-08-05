@@ -1147,7 +1147,7 @@ module Yast
                 ""
               ),
               HSpacing(),
-              HSquash(IntField(Id(:if_sync_port), "Port", 0, 65536, 389)),
+              HSquash(IntField(Id(:if_sync_port), _("Port"), 0, 65536, 389)),
               HSpacing(),
               VBox(
                 Bottom(CheckBox(Id(:cb_start_tls), _("Use StartTLS"), true)),
