@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug  2 12:37:42 UTC 2016 - ralf.habacker@freenet.de
+
+- bnc#991677 - Fix broken detection of common server certificate CA file
+- 3.1.12
+
+-------------------------------------------------------------------
 Wed Oct  1 10:09:24 UTC 2014 - varkoly@suse.com
 
 - bnc#897441 - Yast2 Certificate module are broken

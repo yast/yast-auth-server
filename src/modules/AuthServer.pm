@@ -2529,7 +2529,7 @@ sub WriteTlsConfigCommonCert
     my $tlsSettings = {
                 "certKeyFile"  => "/etc/ssl/servercerts/serverkey.pem",
                 "certFile"     => "/etc/ssl/servercerts/servercert.pem",
-                "caCertFile"   => "/usr/share/pki/trust/anchors/YaST-CA.pem",
+                "caCertFile"   => "/etc/pki/trust/anchors/YaST-CA.pem",
                 "caCertDir"    => "",
                 "crlFile"      => "",
                 "crlCheck"     => 0,
@@ -4304,7 +4304,7 @@ sub HaveCommonServerCertificate
     my $self = shift;
     y2milestone("HaveCommonServerCertificate");
 
-    if (SCR->Read(".target.size", '/etc/ssl/certs/YaST-CA.pem') <= 0)
+    if (SCR->Read(".target.size", '/etc/pki/trust/anchors/YaST-CA.pem') <= 0)
     {
         y2milestone("YaST-CA.pem does not exists");
         return YaST::YCP::Boolean(0);

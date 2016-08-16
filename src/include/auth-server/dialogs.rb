@@ -1185,7 +1185,7 @@ module Yast
         Label.NextButton
       )
       ret = nil
-      cacert = "/usr/share/pki/trust/anchors/YaST-CA.pem"
+      cacert = "/etc/pki/trust/anchors/YaST-CA.pem"
 
       while true
         UI.ChangeWidget(:cb_start_tls, :Enabled, false)
