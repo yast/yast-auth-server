@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug  2 12:37:42 UTC 2016 - ralf.habacker@freenet.de
+
+- bnc#991677 - Fix broken detection of common server certificate CA file
+- 3.1.18
+
++-------------------------------------------------------------------
 Tue Jun  7 09:25:45 UTC 2016 - igonzalezsosa@suse.com
 
 - Stop generating autodocs (fate#320356)
