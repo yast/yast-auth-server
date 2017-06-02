@@ -5,6 +5,9 @@ services:
 
 before_install:
   - docker build -t yast-auth-server-image .
+  # list the installed packages (just for easier debugging)
+  - docker run --rm -it yast-auth-server-image rpm -qa | sort
+
 script:
   # the "yast-travis-cpp" script is included in the base yastdevel/cpp image
   # see https://github.com/yast/docker-yast-cpp/blob/master/yast-travis-cpp
