@@ -1,4 +1,4 @@
-require "yast/rake"
+require 'yast/rake'
 
 Yast::Tasks.configuration do |conf|
   #lets ignore license check for now

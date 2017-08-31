@@ -1,8 +1,0 @@
-# unsupported access privs clause
-dn: olcDatabase={1}hdb,cn=config
-changetype: modify
-replace: olcAccess
-olcAccess: {0}to dn.subtree="ou=ldapconfig,dc=site" 
- filter="objectclass=posixAccount" attrs=uid,loginshell 
- by * +rwx
-olcAccess: {1}to * by * none

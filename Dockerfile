@@ -1,12 +1,2 @@
-FROM yastdevel/cpp
-RUN zypper --gpg-auto-import-keys --non-interactive in --no-recommends \
-  cyrus-sasl-devel \
-  libldapcpp-devel \
-  perl-Digest-SHA1 \
-  perl-X500-DN \
-  perl-gettext \
-  yast2 \
-  yast2-ldap \
-  yast2-users
+FROM yastdevel/ruby
 COPY . /usr/src/app
-
