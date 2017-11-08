@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-SuSE-YaST-Call=new_dir_inst
+
+X-SuSE-YaST-Group=Net_advanced
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-Keywords=authentication,directory,ldap
+
+Icon=yast-ldap-server
+Exec=xdg-su -c "/sbin/yast2 new_dir_inst"
+
+Name=Create New Directory Server
+GenericName=Create New Directory Server
+StartupNotify=true

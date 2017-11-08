@@ -1,26 +1,18 @@
-yast2-auth-server
-=================
-
 [![Travis Build](https://travis-ci.org/yast/yast-auth-server.svg?branch=master)](https://travis-ci.org/yast/yast-auth-server)
-[![Jenkins Build](http://img.shields.io/jenkins/s/https/ci.opensuse.org/yast-auth-server-master.svg)](https://ci.opensuse.org/view/Yast/job/yast-auth-server-master/)
+# yast2-auth-server
+The program assists system administrators to create new directory server and
+Kerberos server instances that help to maintain centralised user identity
+database for a network.
 
+The features are:
+  * Create new directory server instance.
+  * Create new Kerberos server instance.
+  * Integrate Kerberos server with directory server.
 
-With this YaST2 module you can configure LDAP and Kerberos authentication services
-
-Installation
-------------
-
+## Install
 To install the latest stable version on openSUSE or SLE, use zypper:
 
     $ sudo zypper install yast2-auth-server
 
-Running
--------
-
-To run the module, use the following command:
-
-    $ sudo /usr/sbin/yast2 auth-server
-
-This will run the module in text mode. For more options, including running in
-your desktop environment, see section on [running YaST](https://en.opensuse.org/SDB:Starting_YaST) in the YaST documentation.
-
+# Run
+Visit Yast control panel and launch "Authentication Server".

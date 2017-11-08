@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep 22 08:47:51 UTC 2017 - hguo@suse.com
+
+- Upgrade to version 3.2.0 that is a rewrite to work with 389 instead
+  of openldap. (fate#323362)
+
+-------------------------------------------------------------------
 Tue Aug  2 12:37:42 UTC 2016 - ralf.habacker@freenet.de
 
 - bnc#991677 - Fix broken detection of common server certificate CA file
