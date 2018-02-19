@@ -28,7 +28,7 @@ class DS389
   def self.install_pkgs
     Yast.import 'Package'
     # DoInstall never fails
-    Package.DoInstall(['389-ds', 'openldap2-client'].delete_if{|name| Package.Installed(name)})
+    Package.DoInstall(['389-ds', 'openldap2-client'].delete_if {|name| Package.Installed(name)})
   end
 
   # get_instance_names returns an array of directory instance names already present in the system.
@@ -58,8 +58,9 @@ AddSampleEntries=No
   # Returns true only if setup was successful.
   def self.exec_setup(content)
     open(DS_SETUP_INI_PATH, 'w') {|fh| fh.puts(content)}
-    _, stdouterr, result = Open3.popen2e('/usr/sbin/setup-ds.pl', '--silent', '-f', DS_SETUP_INI_PATH)
+    _, stdouterr, result = Open3.popen2e('/usr/sbin/setup-ds.pl', '--debug', '--silent', '-f', DS_SETUP_INI_PATH)
     append_to_log(stdouterr.gets)
+    stdouterr.close
     return result.value.exitstatus == 0
   end
 
@@ -79,13 +80,13 @@ AddSampleEntries=No
   # enable_krb_schema enables kerberos schema in the directory server and then restarts the directory server.
   # Returns true only if server restarted successfully.
   def self.enable_krb_schema(instance_name)
-    ::FileUtils.copy('/usr/share/dirsrv/data/60kerberos.ldif', '/etc/dirsrv/slapd-ldapdom/schema/60kerberos.ldif')
+    ::FileUtils.copy('/usr/share/dirsrv/data/60kerberos.ldif', '/etc/dirsrv/slapd-' + instance_name + '/schema/60kerberos.ldif')
     return self.restart(instance_name)
   end
 
   # restart the directory service specified by the instance name. Returns true only on success.
   def self.restart(instance_name)
-    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'restart', 'dirsrv@'+instance_name)
+    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'restart', 'dirsrv@' + instance_name)
     return result.value.exitstatus == 0
   end
 

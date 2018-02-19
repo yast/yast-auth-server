@@ -4,15 +4,15 @@ Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-Net_advanced;
 
 X-KDE-ModuleType=Library
 X-KDE-HasReadOnlyMode=true
-X-SuSE-YaST-Call=new_dir_inst
+X-SuSE-YaST-Call=krb-server
 
 X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-RootOnly=true
-X-SuSE-YaST-Keywords=authentication,directory,ldap
+X-SuSE-YaST-Keywords=authentication,kerberos,krb,krb5
 
-Icon=yast-ldap-server
-Exec=xdg-su -c "/sbin/yast2 new_dir_inst"
+Icon=yast-kerberos
+Exec=xdg-su -c "/sbin/yast2 krb-server"
 
-Name=Create New Directory Server
-GenericName=Create New Directory Server
+Name=Create New Kerberos Server
+GenericName=Create New Kerberos Server
 StartupNotify=true
