@@ -58,8 +58,9 @@ AddSampleEntries=No
   # Returns true only if setup was successful.
   def self.exec_setup(content)
     open(DS_SETUP_INI_PATH, 'w') {|fh| fh.puts(content)}
-    _, stdouterr, result = Open3.popen2e('/usr/sbin/setup-ds.pl', '--silent', '-f', DS_SETUP_INI_PATH)
+    _, stdouterr, result = Open3.popen2e('/usr/sbin/setup-ds.pl', '--debug', '--silent', '-f', DS_SETUP_INI_PATH)
     append_to_log(stdouterr.gets)
+    stdouterr.close
     return result.value.exitstatus == 0
   end
 
