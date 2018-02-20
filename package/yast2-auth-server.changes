@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Feb 19 13:49:24 UTC 2018 - hguo@suse.com
+
+- Upgrade to version 3.2.1 that resolves issues in setting up
+  new directory and kerberos servers and renames program entry
+  points (bsc#1081324 and bsc#1072808).
+
+-------------------------------------------------------------------
 Fri Sep 22 08:47:51 UTC 2017 - hguo@suse.com
 
 - Upgrade to version 3.2.0 that is a rewrite to work with 389 instead

@@ -15,4 +15,4 @@ To install the latest stable version on openSUSE or SLE, use zypper:
     $ sudo zypper install yast2-auth-server
 
 # Run
-Visit Yast control panel and launch "Authentication Server".
+Visit Yast control panel and launch "Create New Kerberos Server" or "Create New Directory Server".
