@@ -55,7 +55,7 @@ sn: #{cnsn}", true)
   def change_password(dn, new_pass)
     stdin, stdouterr, result = Open3.popen2e('/usr/bin/ldappasswd', '-H', @url, '-x', '-D', @bind_dn, '-w', @bind_pw, '-s', new_pass, dn)
     stdin.close
-    return [stdouterr.gets, result.value.exitstatus == 0]
+    return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]
   end
 
   # aci_allow_modify adds an ACI rule that allows user to modify a tree.

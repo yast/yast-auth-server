@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Mar 19 09:30:15 UTC 2018 - hguo@suse.com
+
+- Fix unreliable server setup routine caused by incorrect handling
+  of external program IO (bsc#1081324), bump to version 3.2.2.
+
+-------------------------------------------------------------------
 Mon Feb 19 13:49:24 UTC 2018 - hguo@suse.com
 
 - Upgrade to version 3.2.1 that resolves issues in setting up
