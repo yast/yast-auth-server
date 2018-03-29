@@ -101,10 +101,10 @@ class MITKerberos
     stdin.close
     succeeded = result.value.exitstatus == 0
     if !succeeded
-      return [stdouterr.gets, false]
+      return [stdouterr.readlines.join('\n'), false]
     end
     File.chmod(0600, file_path)
-    return [stdouterr.gets, true]
+    return [stdouterr.readlines.join('\n'), true]
   end
 
   # init_dir uses kerberos LDAP utility to prepare a directory server for kerberos operation.
@@ -113,7 +113,7 @@ class MITKerberos
     puts ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass].join(' ')
     stdin, stdouterr, result = Open3.popen2e('/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass)
     stdin.close
-    return [stdouterr.gets, result.value.exitstatus == 0]
+    return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]
   end
 
   # restart_kdc restarts KDC system service. Returns true only on success.
