@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Apr  6 11:11:35 UTC 2018 - mfilka@suse.com
+
+- bnc#1087957 - version bump
+- 3.2.3
+
+-------------------------------------------------------------------
 Mon Mar 19 09:30:15 UTC 2018 - hguo@suse.com
 
 - Fix unreliable server setup routine caused by incorrect handling
