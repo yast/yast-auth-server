@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Aug 22 14:51:28 CEST 2018 - schubi@suse.de
+
+- Switched license in spec file from SPDX2 to SPDX3 format.
+
+-------------------------------------------------------------------
 Fri Apr  6 20:11:00 UTC 2018 - mfilka@suse.com
 
 - bnc#1087957 - version bump

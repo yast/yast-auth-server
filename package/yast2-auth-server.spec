@@ -20,7 +20,7 @@ Group:	        System/YaST
 Summary:	    A tool for creating identity management server instances
 Version:        4.0.0
 Release:        0
-License:        GPL-2.0+
+License:        GPL-2.0-or-later
 Source0:        %{name}-%{version}.tar.bz2
 Url:            https://github.com/yast/yast-auth-server
 BuildArch:      noarch
