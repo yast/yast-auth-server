@@ -10,7 +10,7 @@ X-SuSE-YaST-Group=Net_advanced
 X-SuSE-YaST-RootOnly=true
 X-SuSE-YaST-Keywords=authentication,kerberos,krb,krb5
 
-Icon=yast-kerberos
+Icon=yast-kerberos-server
 Exec=xdg-su -c "/sbin/yast2 krb-server"
 
 Name=Create New Kerberos Server
