@@ -18,7 +18,7 @@
 Name:           yast2-auth-server
 Group:	        System/YaST
 Summary:	    A tool for creating identity management server instances
-Version:        4.0.0
+Version:        4.1.0
 Release:        0
 License:        GPL-2.0-or-later
 Source0:        %{name}-%{version}.tar.bz2
@@ -51,6 +51,7 @@ rake install DESTDIR="%{buildroot}"
 %{yast_libdir}/
 %{yast_desktopdir}/
 %{yast_clientdir}/
+%{yast_icondir}
 %license COPYING
 
 %changelog
