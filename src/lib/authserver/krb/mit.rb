@@ -110,7 +110,7 @@ class MITKerberos
   # init_dir uses kerberos LDAP utility to prepare a directory server for kerberos operation.
   # Returns tuple of command output and boolean (success or not).
   def self.init_dir(ldaps_addr, dir_admin_dn, dir_admin_pass, realm_name, container_dn, master_pass)
-    puts ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass].join(' ')
+    #puts ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass].join(' ')
     stdin, stdouterr, result = Open3.popen2e('/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass)
     stdin.close
     return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]

@@ -91,7 +91,7 @@ AddSampleEntries=No
   end
 
   # install_tls_in_nss copies the specified CA and pkcs12 certificate+key into NSS database of 389 instance.
-  def self.install_tls_in_nss(instance_name, ca_path, p12_path)
+  def self.install_tls_in_nss(instance_name, ca_path, p12_path, pk_pass)
     instance_dir = '/etc/dirsrv/slapd-' + instance_name
     # Put CA certificate into NSS database
     _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-A', '-d', instance_dir, '-n', 'ca_cert', '-t', 'C,,', '-i', ca_path)
@@ -100,7 +100,7 @@ AddSampleEntries=No
       return false
     end
     # Put TLS certificate and key into NSS database
-    _, stdouterr, result = Open3.popen2e('/usr/bin/pk12util', '-d', instance_dir, '-W', '', '-K', '', '-i', p12_path)
+    _, stdouterr, result = Open3.popen2e('/usr/bin/pk12util', '-d', instance_dir, '-W', pk_pass, '-K', '', '-i', p12_path)
     append_to_log(stdouterr.readlines.join('\n'))
     if result.value.exitstatus != 0
       return false
@@ -108,8 +108,29 @@ AddSampleEntries=No
     return true
   end
 
+  # add the CA certificate into systems ca-certifcates
+  def self.add_ca_cert_to_system(ca_path)
+    _, stdouterr, result = Open3.popen2e('/usr/bin/cp', ca_path, '/etc/pki/trust/anchors/')
+    append_to_log(stdouterr.readlines.join('\n'))
+    if result.value.exitstatus != 0
+      return false
+    end
+    _, stdouterr, result = Open3.popen2e('/usr/sbin/update-ca-certificates')
+    append_to_log(stdouterr.readlines.join('\n'))
+    if result.value.exitstatus != 0
+      return false
+    end
+    return true
+  end
+
+  def self.gen_ldap_conf(fqdn, suffix)
+    return 'URI ldaps://'+fqdn+'
+base '+suffix
+  end
+
+
   # get_enable_tls_ldif returns LDIF data that can be
-  def self.get_enable_tls_ldif
+  def self.get_enable_tls_ldif(nickname)
     return 'dn: cn=encryption,cn=config
 changetype: modify
 replace: nsSSL3
@@ -134,7 +155,7 @@ changetype: add
 objectclass: top
 objectclass: nsEncryptionModule
 cn: RSA
-nsSSLPersonalitySSL: Server-Cert
+nsSSLPersonalitySSL: '+nickname+'
 nsSSLToken: internal (software)
 nsSSLActivation: on'
   end

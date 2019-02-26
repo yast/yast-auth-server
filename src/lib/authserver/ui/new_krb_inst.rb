@@ -47,7 +47,7 @@ class NewKrbInst < UI::Dialog
             VBox(
                 Frame(_('General options (mandatory)'),
                       VBox(
-                          InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. krb.example.net)'), ''),
+                          InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified host name (e.g. krb.example.net)'), ''),
                           InputField(Id(:realm), Opt(:hstretch), _('Realm name (e.g. EXAMPLE.NET)'), ''),
                       ),
                 ),
@@ -57,7 +57,7 @@ class NewKrbInst < UI::Dialog
                           InputField(Id(:dir_inst), Opt(:hstretch), _('Directory instance name'), ''),
                           InputField(Id(:dir_suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
                           InputField(Id(:container_dn), Opt(:hstretch), _('Container DN of existing users (e.g. ou=users,dc=example,dc=net)'), ''),
-                          InputField(Id(:dm_dn), Opt(:hstretch), _('Directory manager DN (e.g. cn=root)'), ''),
+                          InputField(Id(:dm_dn), Opt(:hstretch), _('Directory manager DN (e.g. cn=root -> no suffix will be appended)'), ''),
                           Password(Id(:dm_pass), Opt(:hstretch), _('Directory manager password'), ''),
                       ),
                 ),
@@ -66,10 +66,10 @@ class NewKrbInst < UI::Dialog
                   VBox(
                       Password(Id(:master_pass), Opt(:hstretch), _('Kerberos database master password'), ''),
                       Password(Id(:master_pass_repeat), Opt(:hstretch), _('Repeat master password'), ''),
-                      InputField(Id(:kdc_dn), Opt(:hstretch), _('KDC account to create (e.g. cn=krbkdc)'), ''),
+                      InputField(Id(:kdc_dn), Opt(:hstretch), _('KDC account to create (e.g. cn=krbkdc -> suffix will be appended)'), ''),
                       Password(Id(:kdc_pass), Opt(:hstretch), _('Password of KDC account'), ''),
                       Password(Id(:kdc_pass_repeat), Opt(:hstretch), _('Repeat password of KDC account'), ''),
-                      InputField(Id(:admin_dn), Opt(:hstretch), _('Admin account to create (e.g. cn=krbadm)'), ''),
+                      InputField(Id(:admin_dn), Opt(:hstretch), _('Admin account to create (e.g. cn=krbadm -> suffix will be appended)'), ''),
                       Password(Id(:admin_pass), Opt(:hstretch), _('Password of admin account'), ''),
                       Password(Id(:admin_pass_repeat), Opt(:hstretch), _('Repeat password of admin account'), ''),
                   ),
@@ -153,7 +153,7 @@ Do you still wish to continue?'))
       # Create kerberos users and give them password in LDAP
       kdc_dn = kdc_dn_prefix+','+dir_suffix
       admin_dn = admin_dn_prefix+','+dir_suffix
-      ldap = LDAPClient.new('ldaps://'+fqdn, dm_dn, dm_pass)
+      ldap = LDAPClient.new('ldaps://'+dir_addr, dm_dn, dm_pass)
       out, ok = ldap.create_person(kdc_dn_prefix, 'Kerberos KDC Connection', dir_suffix)
       MITKerberos.append_to_log(out)
       if !ok
@@ -179,8 +179,16 @@ Do you still wish to continue?'))
         raise
       end
 
-      # Create password file for KDC
+      # Make common and KDC configuration files
       pass_file_path = '/etc/dirsrv/kdc'
+      open('/etc/krb5.conf', 'w') {|fh|
+        fh.puts(MITKerberos.gen_common_conf(realm, fqdn))
+      }
+      open('/var/lib/kerberos/krb5kdc/kdc.conf', 'w') {|fh|
+        fh.puts(MITKerberos.gen_kdc_conf(realm, kdc_dn, admin_dn, container_dn, pass_file_path, dir_addr))
+      }
+
+      # Create password file for KDC
       out, ok = MITKerberos.save_password_into_file(kdc_dn, kdc_pass, pass_file_path)
       MITKerberos.append_to_log(out)
       if !ok
@@ -193,14 +201,6 @@ Do you still wish to continue?'))
         Popup.Error(_('Failed to create password file! Log output may be found in %s') % [KDC_SETUP_LOG_PATH])
         raise
       end
-
-      # Make common and KDC configuration files
-      open('/etc/krb5.conf', 'w') {|fh|
-        fh.puts(MITKerberos.gen_common_conf(realm, fqdn))
-      }
-      open('/var/lib/kerberos/krb5kdc/kdc.conf', 'w') {|fh|
-        fh.puts(MITKerberos.gen_kdc_conf(realm, kdc_dn, admin_dn, container_dn, pass_file_path, dir_addr))
-      }
 
       # Give kerberos rights to modify directory
       out, ok = ldap.aci_allow_modify(container_dn, 'kerberos-admin', admin_dn)
