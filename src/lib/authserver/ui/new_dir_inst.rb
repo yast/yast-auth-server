@@ -141,7 +141,7 @@ class NewDirInst < UI::Dialog
         fh.puts(DS389.gen_ldap_conf(fqdn, suffix))
       }
       if !DS389.enable(instance_name)
-        Popup.Error(_('Failed to enable directory instance, please inspect the journal of dirsrv@%s.service') % [instance_name])
+        Popup.Error(_('Failed to enable directory instance, please inspect the journal of dirsrv@%s.service and dirsrv.target. Log output may be found in %s') % [instance_name] % [DS_SETUP_LOG_PATH])
         raise
       end
       UI.ReplaceWidget(Id(:busy), Empty())

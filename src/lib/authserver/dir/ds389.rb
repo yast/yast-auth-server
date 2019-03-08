@@ -92,7 +92,17 @@ AddSampleEntries=No
 
   # enable the directory service specified by the instance name. Returns true only on success.
   def self.enable(instance_name)
-    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'enable', 'dirsrv@' + instance_name)
+    _, stdouterr, result = Open3.popen2e('/usr/bin/mkdir', '-p', '/etc/systemd/system/dirsrv.target.wants')
+    append_to_log(stdouterr.readlines.join('\n'))
+    if result.value.exitstatus != 0
+	return false
+    end
+    _, stdouterr, result = Open3.popen2e('/usr/bin/ln', '-sf', '/usr/lib/systemd/system/dirsrv@.service', '/etc/systemd/system/dirsrv.target.wants/dirsrv@' + instance_name + '.service')
+    append_to_log(stdouterr.readlines.join('\n'))
+    if result.value.exitstatus != 0
+        return false
+    end
+    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'enable', 'dirsrv.target')
     return result.value.exitstatus == 0
   end
 
