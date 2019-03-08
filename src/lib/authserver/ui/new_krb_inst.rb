@@ -234,6 +234,17 @@ Do you still wish to continue?'))
         raise
       end
 
+      # Kerberos may finally enable
+      if !MITKerberos.enable_kdc
+        Popup.Error(_('Failed to enable KDC, please inspect the journal of krb5kdc.service'))
+        raise
+      end
+      if !MITKerberos.enable_kadmind
+        Popup.Error(_('Failed to enable kadmind, please inspect the journal of kadmind.service'))
+        raise
+      end
+
+
       UI.ReplaceWidget(Id(:busy), Empty())
       Popup.Message(_('New instance has been set up! Log output may be found in %s') % [KDC_SETUP_LOG_PATH])
       finish_dialog(:next)

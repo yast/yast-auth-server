@@ -24,7 +24,7 @@ class MITKerberos
   def self.install_pkgs
     Yast.import 'Package'
     # DoInstall never fails
-    Package.DoInstall(['krb5-client', 'krb5-server'].delete_if{|name| Package.Installed(name)})
+    Package.DoInstall(['krb5-client', 'krb5-server', 'krb5-plugin-kdb-ldap'].delete_if{|name| Package.Installed(name)})
   end
 
   # is_configured returns true only if there kerberos configuration has been altered.
@@ -125,6 +125,18 @@ class MITKerberos
   # restart_kadmind restarts kerberos administration service. Returns true only on success.
   def self.restart_kadmind
     _, _, result = Open3.popen2e('/usr/bin/systemctl', 'restart', 'kadmind')
+    return result.value.exitstatus == 0
+  end
+
+  # enable KDC system service. Returns true only on success.
+  def self.enable_kdc
+    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'enable', 'krb5kdc')
+    return result.value.exitstatus == 0
+  end
+
+  # enable kerberos administration service. Returns true only on success.
+  def self.enable_kadmind
+    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'enable', 'kadmind')
     return result.value.exitstatus == 0
   end
 

@@ -140,7 +140,10 @@ class NewDirInst < UI::Dialog
       open('/etc/openldap/ldap.conf', 'w') {|fh|
         fh.puts(DS389.gen_ldap_conf(fqdn, suffix))
       }
-
+      if !DS389.enable(instance_name)
+        Popup.Error(_('Failed to enable directory instance, please inspect the journal of dirsrv@%s.service') % [instance_name])
+        raise
+      end
       UI.ReplaceWidget(Id(:busy), Empty())
       Popup.Message(_('New instance has been set up! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
       finish_dialog(:next)

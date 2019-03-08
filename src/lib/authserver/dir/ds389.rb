@@ -90,6 +90,12 @@ AddSampleEntries=No
     return result.value.exitstatus == 0
   end
 
+  # enable the directory service specified by the instance name. Returns true only on success.
+  def self.enable(instance_name)
+    _, _, result = Open3.popen2e('/usr/bin/systemctl', 'enable', 'dirsrv@' + instance_name)
+    return result.value.exitstatus == 0
+  end
+
   # install_tls_in_nss copies the specified CA and pkcs12 certificate+key into NSS database of 389 instance.
   def self.install_tls_in_nss(instance_name, ca_path, p12_path, pk_pass)
     instance_dir = '/etc/dirsrv/slapd-' + instance_name
