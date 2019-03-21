@@ -16,3 +16,20 @@ To install the latest stable version on openSUSE or SLE, use zypper:
 
 # Run
 Visit Yast control panel and launch "Create New Kerberos Server" or "Create New Directory Server".
+
+# Development
+
+You need to prepare your environment with:
+
+```
+ruby_version=$(ruby -e "puts RbConfig::CONFIG['ruby_version']")
+zypper install -C "rubygem(ruby:$ruby_version:yast-rake)"
+zypper install git yast2-devtools yast2-testsuite
+```
+
+You can then run the auth-server module with:
+
+```
+rake run
+```
+

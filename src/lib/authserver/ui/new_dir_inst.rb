@@ -46,15 +46,14 @@ class NewDirInst < UI::Dialog
             Frame(_('General options (mandatory)'),
                   VBox(
                       InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
-                      InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. MyOrgDirectory)'), ''),
+                      InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. localhost)'), ''),
                       InputField(Id(:suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
-                      InputField(Id(:dm_dn), Opt(:hstretch), _('Directory manager DN (e.g. cn=root)'), ''),
                   ),
             ),
             Frame(_('Security options (mandatory)'),
                   VBox(
-                      Password(Id(:dm_pass), Opt(:hstretch), _('Directory manager password'), ''),
-                      Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat directory manager password'), ''),
+                      Password(Id(:dm_pass), Opt(:hstretch), _('"cn=Directory Manager" password'), ''),
+                      Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat "cn=Directory Manager" password'), ''),
                       InputField(Id(:tls_ca), Opt(:hstretch), _('Server TLS certificate authority in PEM format'), ''),
                       InputField(Id(:tls_p12), Opt(:hstretch), _('Server TLS certificate and key in PKCS12 format'), ''),
                   ),
@@ -72,7 +71,6 @@ class NewDirInst < UI::Dialog
     fqdn = UI.QueryWidget(Id(:fqdn), :Value)
     instance_name = UI.QueryWidget(Id(:instance_name), :Value)
     suffix = UI.QueryWidget(Id(:suffix), :Value)
-    dm_dn = UI.QueryWidget(Id(:dm_dn), :Value)
     dm_pass = UI.QueryWidget(Id(:dm_pass), :Value)
     dm_pass_repeat = UI.QueryWidget(Id(:dm_pass_repeat), :Value)
     tls_ca = UI.QueryWidget(Id(:tls_ca), :Value)
@@ -111,13 +109,7 @@ class NewDirInst < UI::Dialog
         Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
         raise
       end
-      ldap = LDAPClient.new('ldap://'+fqdn, dm_dn, dm_pass)
-      out, ok = ldap.modify(DS389.get_enable_tls_ldif, true)
-      DS389.append_to_log(out)
-      if !ok
-        Popup.Error(_('Failed to enable TLS! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
-      end
+
       if !DS389.restart(instance_name)
         Popup.Error(_('Failed to restart directory instance, please inspect the journal of dirsrv@%s.service') % [instance_name])
         raise

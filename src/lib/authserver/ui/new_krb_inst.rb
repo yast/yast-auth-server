@@ -53,12 +53,10 @@ class NewKrbInst < UI::Dialog
                 ),
                 Frame(_('389 directory server connectivity (mandatory)'),
                       VBox(
-                          InputField(Id(:dir_addr), Opt(:hstretch), _('Directory server address (e.g. dir.example.net)'), ''),
-                          InputField(Id(:dir_inst), Opt(:hstretch), _('Directory instance name'), ''),
+                          InputField(Id(:dir_addr), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
+			  InputField(Id(:dir_inst), Opt(:hstretch), _('Directory instance name (e.g. localhost)'), ''),
                           InputField(Id(:dir_suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
-                          InputField(Id(:container_dn), Opt(:hstretch), _('Container DN of existing users (e.g. ou=users,dc=example,dc=net)'), ''),
-                          InputField(Id(:dm_dn), Opt(:hstretch), _('Directory manager DN (e.g. cn=root)'), ''),
-                          Password(Id(:dm_pass), Opt(:hstretch), _('Directory manager password'), ''),
+                          Password(Id(:dm_pass), Opt(:hstretch), _('"cn=Directory Manager" password'), ''),
                       ),
                 ),
             ),
@@ -145,10 +143,7 @@ Do you still wish to continue?'))
     begin
       MITKerberos.install_pkgs
       # Enable kerberos schema on 389
-      if !DS389.enable_krb_schema(dir_inst)
-        Popup.Error(_('Failed to enable Kerberos schema.'))
-        raise
-      end
+      # By default 389-ds ships with this schema enabled today.
 
       # Create kerberos users and give them password in LDAP
       kdc_dn = kdc_dn_prefix+','+dir_suffix
