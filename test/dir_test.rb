@@ -20,7 +20,8 @@ require 'authserver/dir/ds389'
 
 describe DS389 do
   it 'gen_setup_ini' do
-    match = '[General]
+    match = '
+[General]
 FullMachineName=dir.example.com
 SuiteSpotUserID=dirsrv
 SuiteSpotGroup=dirsrv

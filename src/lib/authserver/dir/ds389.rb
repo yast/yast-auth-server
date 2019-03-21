@@ -15,10 +15,10 @@ require 'open3'
 require 'fileutils'
 
 # DS_SETUP_LOG_PATH is the path to progress and debug log file for setting up a new directory instance.
-DS_SETUP_LOG_PATH = '/root/yast2-auth-server-dir-setup.log'
+DS_SETUP_LOG_PATH = '/tmp/yast2-auth-server-dir-setup.log'
 # DS_SETUP_INI_PATH is the path to parameter file for setting up new directory instance.
 # Place the file under root directory because there are sensitive details in it.
-DS_SETUP_INI_PATH = '/root/yast2-auth-server-dir-setup.ini'
+DS_SETUP_INI_PATH = '/tmp/yast2-auth-server-dir-setup.ini'
 
 # DS389 serves utility functions for setting up a new instance of 389 directory server.
 class DS389
@@ -59,9 +59,17 @@ suffix = #{suffix}
   # The output of setup script is written into file /root/yast2-auth-server-dir-setup.log
   # Returns true only if setup was successful.
   def self.exec_setup(content)
+    append_to_log('Beginning YAST auth server installation ...')
+
     open(DS_SETUP_INI_PATH, 'w') {|fh| fh.puts(content)}
     # dry run first to see if it breaks ...
     stdin, stdouterr, result = Open3.popen2e('/usr/sbin/dscreate', '-v', 'from-file', '-n', DS_SETUP_INI_PATH)
+    append_to_log(stdouterr.readlines.join('\n'))
+
+    if result.value.exitstatus != 0
+        return false
+    end
+
     # Right do the real thing.
     stdin, stdouterr, result = Open3.popen2e('/usr/sbin/dscreate', '-v', 'from-file', DS_SETUP_INI_PATH)
     append_to_log(stdouterr.readlines.join('\n'))

@@ -77,7 +77,7 @@ class NewDirInst < UI::Dialog
     tls_p12 = UI.QueryWidget(Id(:tls_p12), :Value)
 
     # Validate input
-    if fqdn == '' || instance_name == ''|| suffix == '' || dm_dn == '' || dm_pass == '' || tls_ca == '' || tls_p12 == ''
+    if fqdn == '' || instance_name == ''|| suffix == '' || dm_pass == '' || tls_ca == '' || tls_p12 == ''
       Popup.Error(_('Please complete setup details. All input fields are mandatory.'))
       return
     end
@@ -86,17 +86,18 @@ class NewDirInst < UI::Dialog
       return
     end
     if !File.exists?(tls_ca) || !File.exists?(tls_p12)
-      Popup.Error(_('TLS certificate authority or certificate/key file does not exist.'))
+      Popup.Error(_('TLS certificate authority PEM OR certificate/key PKCS12 file does not exist.'))
       return
     end
-    if DS389.get_instance_names.include?(instance_name)
-      Popup.Error(_('The instance name is already used.'))
-      return
-    end
+    # The dscreate tool has an instance name checker that is much more aware of instance
+    # rules than this ruby tool can be.
 
-    UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute or two.')))
+    UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute ...')))
     begin
-      DS389.install_pkgs
+      if !DS389.install_pkgs
+	Popup.Error(_('Error during package installation.'))
+        raise
+      end
       # Collect setup parameters into an INI file and feed it into 389 setup script
       ok = DS389.exec_setup(DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, dm_pass))
       DS389.remove_setup_ini
@@ -120,7 +121,7 @@ class NewDirInst < UI::Dialog
       finish_dialog(:next)
     rescue
       # Give user an opportunity to correct mistake
-      UI.ReplaceWidget(Id(:busy), Empty())
+      # UI.ReplaceWidget(Id(:busy), Empty())
     end
 
   end
