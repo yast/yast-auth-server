@@ -9,6 +9,7 @@
 # this program; if not, contact SUSE LINUX GmbH.
 
 # Authors:      Howard Guo <hguo@suse.com>
+# 		William Brown <wbrown@suse.de>
 
 require 'yast'
 require 'ui/dialog'
@@ -121,7 +122,7 @@ class NewDirInst < UI::Dialog
       finish_dialog(:next)
     rescue
       # Give user an opportunity to correct mistake
-      # UI.ReplaceWidget(Id(:busy), Empty())
+      UI.ReplaceWidget(Id(:busy), Empty())
     end
 
   end

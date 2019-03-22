@@ -17,8 +17,6 @@ To install the latest stable version on openSUSE or SLE, use zypper:
 # Run
 Visit Yast control panel and launch "Create New Kerberos Server" or "Create New Directory Server".
 
-# Tests
-Currently Unknown how to make tests work ...
 
 # Development
 
@@ -27,6 +25,7 @@ You need to prepare your environment with:
 ```
 ruby_version=$(ruby -e "puts RbConfig::CONFIG['ruby_version']")
 zypper install -C "rubygem(ruby:$ruby_version:yast-rake)"
+zypper install -C "rubygem(ruby:$ruby_version:rspec)"
 zypper install git yast2-devtools yast2-testsuite yast
 ```
 
@@ -53,4 +52,20 @@ pk12util -o server-export.p12 -d . -k password.txt -n Server-Cert
 
 /home/admin/local_ca/
 ```
+
+# Tests
+
+```
+rake test:unit
+```
+
+# Logs
+
+They can be found in:
+
+```
+~/.y2log
+/var/log/YaST2/y2log
+```
+
 
