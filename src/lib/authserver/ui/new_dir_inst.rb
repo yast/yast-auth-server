@@ -101,9 +101,9 @@ class NewDirInst < UI::Dialog
       end
       # Collect setup parameters into an INI file and feed it into 389 setup script
       log.debug("+++++++ MARKER ONE +++++++")
-      ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, dm_pass)
+      ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
       log.debug("+++++++ MARKER TWO +++++++")
-      ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, "********")
+      ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
       log.debug("+++++++ MARKER THREE +++++++")
       log.debug(ini_safe_content)
       log.debug("+++++++ MARKER FOUR +++++++")
