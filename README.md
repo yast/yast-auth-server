@@ -33,6 +33,8 @@ You can then run the auth-server module with:
 
 ```
 rake run
+rake run[module name]
+rake run[ldap-server]
 ```
 
 For the 389-ds setup, you'll require a CA + pkcs12 bundle with a cert to use. You can generate
@@ -67,5 +69,13 @@ They can be found in:
 ~/.y2log
 /var/log/YaST2/y2log
 ```
+
+For example logging you can execute YaST with debugging environment variables.
+
+```
+Y2DEBUG=1 rake run[ldap-server]
+```
+
+
 
 

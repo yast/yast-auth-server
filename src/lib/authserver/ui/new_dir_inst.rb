@@ -100,7 +100,15 @@ class NewDirInst < UI::Dialog
         raise
       end
       # Collect setup parameters into an INI file and feed it into 389 setup script
-      ok = DS389.exec_setup(DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, dm_pass))
+      log.debug("+++++++ MARKER ONE +++++++")
+      ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, dm_pass)
+      log.debug("+++++++ MARKER TWO +++++++")
+      ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, "********")
+      log.debug("+++++++ MARKER THREE +++++++")
+      log.debug(ini_safe_content)
+      log.debug("+++++++ MARKER FOUR +++++++")
+      ok = DS389.exec_setup(ini_content)
+      log.debug("+++++++ MARKER FIVE +++++++")
       DS389.remove_setup_ini
       if !ok
         Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])

@@ -15,8 +15,6 @@ require 'yast'
 require 'open3'
 require 'fileutils'
 
-# DS_SETUP_LOG_PATH is the path to progress and debug log file for setting up a new directory instance.
-DS_SETUP_LOG_PATH = '/tmp/yast2-auth-server-dir-setup.log'
 # DS_SETUP_INI_PATH is the path to parameter file for setting up new directory instance.
 # Place the file under root directory because there are sensitive details in it.
 DS_SETUP_INI_PATH = '/tmp/yast2-auth-server-dir-setup.ini'
@@ -57,7 +55,7 @@ suffix = #{suffix}
   end
 
   # exec_setup runs setup-ds.pl using input parameters file content.
-  # The output of setup script is written into file /root/yast2-auth-server-dir-setup.log
+  # The output of setup script is written into file .y2log or /var/log/YaST/y2log
   # Returns true only if setup was successful.
   def self.exec_setup(content)
     append_to_log('Beginning YAST auth server installation ...')
@@ -85,10 +83,7 @@ suffix = #{suffix}
 
   # append_to_log appends current time and content into log file placed under /root/.
   def self.append_to_log(content)
-    open(DS_SETUP_LOG_PATH, 'a') {|fh|
-      fh.puts(Time.now)
-      fh.puts(content)
-    }
+    log.debug(content)
   end
 
   # restart the directory service specified by the instance name. Returns true only on success.
