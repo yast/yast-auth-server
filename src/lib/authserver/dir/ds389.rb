@@ -17,11 +17,12 @@ require 'fileutils'
 
 # DS_SETUP_INI_PATH is the path to parameter file for setting up new directory instance.
 # Place the file under root directory because there are sensitive details in it.
-DS_SETUP_INI_PATH = '/tmp/yast2-auth-server-dir-setup.ini'
+DS_SETUP_INI_PATH = '/root/yast2-auth-server-dir-setup.ini'
 
 # DS389 serves utility functions for setting up a new instance of 389 directory server.
 class DS389
   include Yast
+  include Yast::Logger
 
   # install_pkgs installs software packages mandatory for setting up 389 directory server.
   def self.install_pkgs
@@ -63,7 +64,7 @@ suffix = #{suffix}
     open(DS_SETUP_INI_PATH, 'w') {|fh| fh.puts(content)}
     # dry run first to see if it breaks ...
     stdin, stdouterr, result = Open3.popen2e('/usr/sbin/dscreate', '-v', 'from-file', '-n', DS_SETUP_INI_PATH)
-    append_to_log(stdouterr.readlines.join('\n'))
+    stdouterr.readlines.map { |l| append_to_log(l) }
 
     if result.value.exitstatus != 0
         return false
@@ -71,7 +72,7 @@ suffix = #{suffix}
 
     # Right do the real thing.
     stdin, stdouterr, result = Open3.popen2e('/usr/sbin/dscreate', '-v', 'from-file', DS_SETUP_INI_PATH)
-    append_to_log(stdouterr.readlines.join('\n'))
+    stdouterr.readlines.map { |l| append_to_log(l) }
     stdin.close
     return result.value.exitstatus == 0
   end
@@ -98,13 +99,13 @@ suffix = #{suffix}
     instance_dir = '/etc/dirsrv/slapd-' + instance_name
     # Put CA certificate into NSS database
     _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-A', '-d', instance_dir, '-n', 'ca_cert', '-t', 'C,,', '-i', ca_path)
-    append_to_log(stdouterr.readlines.join('\n'))
+    stdouterr.readlines.map { |l| append_to_log(l) }
     if result.value.exitstatus != 0
       return false
     end
     # Put TLS certificate and key into NSS database
     _, stdouterr, result = Open3.popen2e('/usr/bin/pk12util', '-d', instance_dir, '-W', '', '-K', '', '-i', p12_path)
-    append_to_log(stdouterr.readlines.join('\n'))
+    stdouterr.readlines.map { |l| append_to_log(l) }
     if result.value.exitstatus != 0
       return false
     end

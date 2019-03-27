@@ -77,6 +77,8 @@ class NewDirInst < UI::Dialog
     tls_ca = UI.QueryWidget(Id(:tls_ca), :Value)
     tls_p12 = UI.QueryWidget(Id(:tls_p12), :Value)
 
+    UI.ReplaceWidget(Id(:busy), Empty())
+
     # Validate input
     if fqdn == '' || instance_name == ''|| suffix == '' || dm_pass == '' || tls_ca == '' || tls_p12 == ''
       Popup.Error(_('Please complete setup details. All input fields are mandatory.'))
@@ -94,44 +96,40 @@ class NewDirInst < UI::Dialog
     # rules than this ruby tool can be.
 
     UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute ...')))
-    begin
       if !DS389.install_pkgs
 	Popup.Error(_('Error during package installation.'))
-        raise
+    	UI.ReplaceWidget(Id(:busy), Empty())
+      	return
       end
       # Collect setup parameters into an INI file and feed it into 389 setup script
-      log.debug("+++++++ MARKER ONE +++++++")
       ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
-      log.debug("+++++++ MARKER TWO +++++++")
       ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
-      log.debug("+++++++ MARKER THREE +++++++")
       log.debug(ini_safe_content)
-      log.debug("+++++++ MARKER FOUR +++++++")
       ok = DS389.exec_setup(ini_content)
-      log.debug("+++++++ MARKER FIVE +++++++")
+      # Always remove the ini file
       DS389.remove_setup_ini
       if !ok
-        Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
+        Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+    	UI.ReplaceWidget(Id(:busy), Empty())
+      	return
       end
       # Turn on TLS
       if !DS389.install_tls_in_nss(instance_name, tls_ca, tls_p12)
         Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
+    	UI.ReplaceWidget(Id(:busy), Empty())
+      	return
       end
 
       if !DS389.restart(instance_name)
         Popup.Error(_('Failed to restart directory instance, please inspect the journal of dirsrv@%s.service') % [instance_name])
-        raise
+    	UI.ReplaceWidget(Id(:busy), Empty())
+      	return
       end
 
       UI.ReplaceWidget(Id(:busy), Empty())
       Popup.Message(_('New instance has been set up! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
       finish_dialog(:next)
-    rescue
-      # Give user an opportunity to correct mistake
-      UI.ReplaceWidget(Id(:busy), Empty())
-    end
+    UI.ReplaceWidget(Id(:busy), Empty())
 
   end
 end
