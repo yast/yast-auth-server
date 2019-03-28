@@ -98,13 +98,16 @@ suffix = #{suffix}
 	  # #We may need to clear content from the NSS DB first ... as 389 adds ssca
     instance_dir = '/etc/dirsrv/slapd-' + instance_name
     # Put CA certificate into NSS database
-    _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-A', '-d', instance_dir, '-n', 'ca_cert', '-t', 'C,,', '-i', ca_path)
+    _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-A', '-f', instance_dir + '/pwdfile.txt', '-d', instance_dir, '-n', 'ca_cert', '-t', 'C,,', '-i', ca_path)
     stdouterr.readlines.map { |l| append_to_log(l) }
     if result.value.exitstatus != 0
       return false
     end
-    # Put TLS certificate and key into NSS database
-    _, stdouterr, result = Open3.popen2e('/usr/bin/pk12util', '-d', instance_dir, '-W', '', '-K', '', '-i', p12_path)
+    # Delete the automatically created Server-Cert - we don't care if it fails ...
+    _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-F', '-d', instance_dir, '-n', 'Server-Cert', '-f', instance_dir + '/pwdfile.txt')
+    stdouterr.readlines.map { |l| append_to_log(l) }
+    # Put TLS certificate and key into NSS database - and hope it's named Server-Cert ...
+    _, stdouterr, result = Open3.popen2e('/usr/bin/pk12util', '-i', p12_path, '-k', instance_dir + '/pwdfile.txt', '-d', instance_dir, '-W', '')
     stdouterr.readlines.map { |l| append_to_log(l) }
     if result.value.exitstatus != 0
       return false
