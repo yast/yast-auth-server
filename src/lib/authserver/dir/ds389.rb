@@ -9,7 +9,7 @@
 # this program; if not, contact SUSE LINUX GmbH.
 
 # Authors:      Howard Guo <hguo@suse.com>
-# 		William Brown <wbrown@suse.de>
+#               William Brown <wbrown@suse.de>
 
 require 'yast'
 require 'open3'
@@ -95,7 +95,6 @@ suffix = #{suffix}
 
   # install_tls_in_nss copies the specified CA and pkcs12 certificate+key into NSS database of 389 instance.
   def self.install_tls_in_nss(instance_name, ca_path, p12_path)
-	  # #We may need to clear content from the NSS DB first ... as 389 adds ssca
     instance_dir = '/etc/dirsrv/slapd-' + instance_name
     # Put CA certificate into NSS database
     _, stdouterr, result = Open3.popen2e('/usr/bin/certutil', '-A', '-f', instance_dir + '/pwdfile.txt', '-d', instance_dir, '-n', 'ca_cert', '-t', 'C,,', '-i', ca_path)

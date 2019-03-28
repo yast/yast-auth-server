@@ -9,7 +9,7 @@
 # this program; if not, contact SUSE LINUX GmbH.
 
 # Authors:      Howard Guo <hguo@suse.com>
-# 		William Brown <wbrown@suse.de>
+#               William Brown <wbrown@suse.de>
 
 require 'yast'
 require 'ui/dialog'
@@ -45,26 +45,26 @@ class NewDirInst < UI::Dialog
         Left(Heading(_('Create New Directory Instance'))),
         HBox(
             Frame(_('General options (mandatory)'),
-                  VBox(
-                      InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
-                      InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. localhost)'), ''),
-                      InputField(Id(:suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
-                  ),
+                VBox(
+                    InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
+                    InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. localhost)'), ''),
+                    InputField(Id(:suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
+                ),
             ),
-	    VBox(
+            VBox(
                 Frame(_('Security options (mandatory)'),
-                      VBox(
-                          Password(Id(:dm_pass), Opt(:hstretch), _('"cn=Directory Manager" password'), ''),
-                          Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat "cn=Directory Manager" password'), ''),
-                      ),
+                    VBox(
+                        Password(Id(:dm_pass), Opt(:hstretch), _('"cn=Directory Manager" password'), ''),
+                        Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat "cn=Directory Manager" password'), ''),
+                    ),
                 ),
                 Frame(_('Security options (optional)'),
-                      VBox(
-                          InputField(Id(:tls_ca), Opt(:hstretch), _('Server TLS certificate authority in PEM format'), ''),
-                          InputField(Id(:tls_p12), Opt(:hstretch), _('Server TLS certificate and key in PKCS12 format with friendly name "Server-Cert"'), ''),
-                      ),
+                    VBox(
+                        InputField(Id(:tls_ca), Opt(:hstretch), _('Server TLS certificate authority in PEM format'), ''),
+                        InputField(Id(:tls_p12), Opt(:hstretch), _('Server TLS certificate and key in PKCS12 format with friendly name "Server-Cert"'), ''),
+                    ),
                 ),
-	    ),
+            ),
         ),
         HBox(
             PushButton(Id(:ok), Label.OKButton),
@@ -87,7 +87,7 @@ class NewDirInst < UI::Dialog
 
     # Validate input
     if fqdn == '' || instance_name == ''|| suffix == '' || dm_pass == '' 
-	    Popup.Error(_('Please complete mandatory setup fields.'))
+      Popup.Error(_('Please complete mandatory setup fields.'))
       return
     end
     if dm_pass_repeat != dm_pass
@@ -106,48 +106,44 @@ class NewDirInst < UI::Dialog
     # rules than this ruby tool can be.
     UI.ReplaceWidget(Id(:busy), Label(_('Preparing to install new instance, this may take a minute ...')))
 
-      if !DS389.install_pkgs
-	Popup.Error(_('Error during package installation.'))
-      	return
-      end
+    if !DS389.install_pkgs
+      Popup.Error(_('Error during package installation.'))
+      return
+    end
 
-
-      # Collect setup parameters into an INI file and feed it into 389 setup script
-      ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
-      ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
-      log.debug(ini_safe_content)
+    # Collect setup parameters into an INI file and feed it into 389 setup script
+    ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
+    ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
+    log.debug(ini_safe_content)
     UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute ...')))
-      ok = DS389.exec_setup(ini_content)
-      # Always remove the ini file
-      DS389.remove_setup_ini
-      if !ok
-        Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
-    	UI.ReplaceWidget(Id(:busy), Empty())
-      	return
-      end
+    ok = DS389.exec_setup(ini_content)
+    # Always remove the ini file
+    DS389.remove_setup_ini
+    if !ok
+      Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+      UI.ReplaceWidget(Id(:busy), Empty())
+      return
+    end
 
-      if (tls_ca != '' && tls_p12 != '')
-        UI.ReplaceWidget(Id(:busy), Label(_('Configuring instance TLS ...')))
-
+    if (tls_ca != '' && tls_p12 != '')
+      UI.ReplaceWidget(Id(:busy), Label(_('Configuring instance TLS ...')))
       # Turn on TLS
       if !DS389.install_tls_in_nss(instance_name, tls_ca, tls_p12)
         Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
-    	UI.ReplaceWidget(Id(:busy), Empty())
-      	return
+        UI.ReplaceWidget(Id(:busy), Empty())
+        return
       end
 
       if !DS389.restart(instance_name)
         Popup.Error(_('Failed to restart directory instance, please inspect the journal of dirsrv@%s.service and /var/log/dirsrv/slapd-%s') % [instance_name, instance_name])
-    	UI.ReplaceWidget(Id(:busy), Empty())
-      	return
+        UI.ReplaceWidget(Id(:busy), Empty())
+        return
       end
+    end
 
-      end
-
-      UI.ReplaceWidget(Id(:busy), Empty())
-      Popup.Message(_('New instance has been set up! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
-      finish_dialog(:next)
     UI.ReplaceWidget(Id(:busy), Empty())
-
+    Popup.Message(_('New instance has been set up! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+    finish_dialog(:next)
+    UI.ReplaceWidget(Id(:busy), Empty())
   end
 end
