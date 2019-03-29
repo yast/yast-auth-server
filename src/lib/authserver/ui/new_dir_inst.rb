@@ -114,13 +114,13 @@ class NewDirInst < UI::Dialog
     # Collect setup parameters into an INI file and feed it into 389 setup script
     ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
     ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
-    log.debug(ini_safe_content)
+    log.info(ini_safe_content)
     UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute ...')))
     ok = DS389.exec_setup(ini_content)
     # Always remove the ini file
     DS389.remove_setup_ini
     if !ok
-      Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+      Popup.Error(_('Failed to set up new instance! Log output may be found in /var/log/YaST/y2log'))
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -129,7 +129,7 @@ class NewDirInst < UI::Dialog
       UI.ReplaceWidget(Id(:busy), Label(_('Configuring instance TLS ...')))
       # Turn on TLS
       if !DS389.install_tls_in_nss(instance_name, tls_ca, tls_p12)
-        Popup.Error(_('Failed to set up new instance! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+        Popup.Error(_('Failed to set up new instance! Log output may be found in /var/log/YaST/y2log'))
         UI.ReplaceWidget(Id(:busy), Empty())
         return
       end
@@ -142,7 +142,7 @@ class NewDirInst < UI::Dialog
     end
 
     UI.ReplaceWidget(Id(:busy), Empty())
-    Popup.Message(_('New instance has been set up! Log output may be found in ~/.y2log or /var/log/YaST/y2log'))
+    Popup.Message(_('New instance has been set up! Log output may be found in /var/log/YaST/y2log'))
     finish_dialog(:next)
     UI.ReplaceWidget(Id(:busy), Empty())
   end

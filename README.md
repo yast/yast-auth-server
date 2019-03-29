@@ -12,7 +12,9 @@ The features are:
 ## Install
 To install the latest stable version on openSUSE or SLE, use zypper:
 
-    $ sudo zypper install yast2-auth-server
+```
+$ sudo zypper install yast2-auth-server
+```
 
 # Run
 Visit Yast control panel and launch "Create New Kerberos Server" or "Create New Directory Server".
@@ -51,8 +53,6 @@ certutil -S -n Server-Cert -t ",," -c CAissuer -f password.txt -d . -s "CN=test_
 
 certutil -L -n CAissuer -a -d . > ca.pem
 pk12util -o server-export.p12 -d . -k password.txt -n Server-Cert
-
-/home/admin/local_ca/
 ```
 
 # Tests
@@ -63,17 +63,30 @@ rake test:unit
 
 # Logs
 
-They can be found in:
+If you are running as a non-root user, the logs are located in:
 
 ```
 ~/.y2log
+```
+
+If you are running as root, these logs are in:
+
+```
 /var/log/YaST2/y2log
 ```
 
-For example logging you can execute YaST with debugging environment variables.
+For more detailed logging, you are able to execute YaST with debugging environment variables:
 
 ```
 Y2DEBUG=1 rake run[ldap-server]
+```
+
+# Build
+
+You can build the package with:
+
+```
+rake osc:build
 ```
 
 

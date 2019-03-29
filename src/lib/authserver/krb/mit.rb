@@ -127,6 +127,6 @@ class MITKerberos
 
   # append_to_log appends current time and content into log file placed under /root/.
   def self.append_to_log(content)
-    log.debug(content)
+    log.info(content)
   end
 end
