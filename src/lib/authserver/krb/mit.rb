@@ -13,9 +13,6 @@
 require 'yast'
 require 'open3'
 
-# KDC_SETUP_LOG_PATH is the path to progress and debug log file for setting up a new KDC.
-KDC_SETUP_LOG_PATH = '/root/yast2-auth-server-kdc-setup.log'
-
 # MITKerberos serves utility functions for setting up a new directory connected KDC.
 class MITKerberos
   include Yast
@@ -130,9 +127,6 @@ class MITKerberos
 
   # append_to_log appends current time and content into log file placed under /root/.
   def self.append_to_log(content)
-    open(KDC_SETUP_LOG_PATH, 'a') {|fh|
-      fh.puts(Time.now)
-      fh.puts(content)
-    }
+    log.info(content)
   end
 end

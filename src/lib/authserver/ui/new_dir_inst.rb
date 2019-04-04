@@ -9,6 +9,7 @@
 # this program; if not, contact SUSE LINUX GmbH.
 
 # Authors:      Howard Guo <hguo@suse.com>
+#               William Brown <wbrown@suse.de>
 
 require 'yast'
 require 'ui/dialog'
@@ -44,20 +45,25 @@ class NewDirInst < UI::Dialog
         Left(Heading(_('Create New Directory Instance'))),
         HBox(
             Frame(_('General options (mandatory)'),
-                  VBox(
-                      InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
-                      InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. MyOrgDirectory)'), ''),
-                      InputField(Id(:suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
-                      InputField(Id(:dm_dn), Opt(:hstretch), _('Directory manager DN (e.g. cn=root)'), ''),
-                  ),
+                VBox(
+                    InputField(Id(:fqdn), Opt(:hstretch), _('Fully qualified domain name (e.g. dir.example.net)'), ''),
+                    InputField(Id(:instance_name), Opt(:hstretch), _('Directory server instance name (e.g. localhost)'), ''),
+                    InputField(Id(:suffix), Opt(:hstretch), _('Directory suffix (e.g. dc=example,dc=net)'), ''),
+                ),
             ),
-            Frame(_('Security options (mandatory)'),
-                  VBox(
-                      Password(Id(:dm_pass), Opt(:hstretch), _('Directory manager password'), ''),
-                      Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat directory manager password'), ''),
-                      InputField(Id(:tls_ca), Opt(:hstretch), _('Server TLS certificate authority in PEM format'), ''),
-                      InputField(Id(:tls_p12), Opt(:hstretch), _('Server TLS certificate and key in PKCS12 format'), ''),
-                  ),
+            VBox(
+                Frame(_('Security options (mandatory)'),
+                    VBox(
+                        Password(Id(:dm_pass), Opt(:hstretch), _('"cn=Directory Manager" password'), ''),
+                        Password(Id(:dm_pass_repeat), Opt(:hstretch), _('Repeat "cn=Directory Manager" password'), ''),
+                    ),
+                ),
+                Frame(_('Security options (optional)'),
+                    VBox(
+                        InputField(Id(:tls_ca), Opt(:hstretch), _('Server TLS certificate authority in PEM format'), ''),
+                        InputField(Id(:tls_p12), Opt(:hstretch), _('Server TLS certificate and key in PKCS12 format with friendly name "Server-Cert"'), ''),
+                    ),
+                ),
             ),
         ),
         HBox(
@@ -72,64 +78,72 @@ class NewDirInst < UI::Dialog
     fqdn = UI.QueryWidget(Id(:fqdn), :Value)
     instance_name = UI.QueryWidget(Id(:instance_name), :Value)
     suffix = UI.QueryWidget(Id(:suffix), :Value)
-    dm_dn = UI.QueryWidget(Id(:dm_dn), :Value)
     dm_pass = UI.QueryWidget(Id(:dm_pass), :Value)
     dm_pass_repeat = UI.QueryWidget(Id(:dm_pass_repeat), :Value)
     tls_ca = UI.QueryWidget(Id(:tls_ca), :Value)
     tls_p12 = UI.QueryWidget(Id(:tls_p12), :Value)
 
+    UI.ReplaceWidget(Id(:busy), Empty())
+
     # Validate input
-    if fqdn == '' || instance_name == ''|| suffix == '' || dm_dn == '' || dm_pass == '' || tls_ca == '' || tls_p12 == ''
-      Popup.Error(_('Please complete setup details. All input fields are mandatory.'))
+    if fqdn == '' || instance_name == ''|| suffix == '' || dm_pass == '' 
+      Popup.Error(_('Please complete mandatory setup fields.'))
       return
     end
     if dm_pass_repeat != dm_pass
       Popup.Error(_('Two password entries do not match.'))
       return
     end
-    if !File.exists?(tls_ca) || !File.exists?(tls_p12)
-      Popup.Error(_('TLS certificate authority or certificate/key file does not exist.'))
+    if ! ((tls_ca == '' && tls_p12 == '') || (tls_ca != '' && tls_p12 != ''))
+      Popup.Error(_('Both TLS Certificate authority and PKCS12 must be provided, or none provided.'))
       return
     end
-    if DS389.get_instance_names.include?(instance_name)
-      Popup.Error(_('The instance name is already used.'))
+    if (tls_ca != '' && tls_p12 != '') && (!File.exists?(tls_ca) || !File.exists?(tls_p12))
+      Popup.Error(_('TLS certificate authority PEM OR certificate/key PKCS12 file does not exist.'))
+      return
+    end
+    # The dscreate tool has an instance name checker that is much more aware of instance
+    # rules than this ruby tool can be.
+    UI.ReplaceWidget(Id(:busy), Label(_('Preparing to install new instance, this may take a minute ...')))
+
+    if !DS389.install_pkgs
+      Popup.Error(_('Error during package installation.'))
       return
     end
 
-    UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute or two.')))
-    begin
-      DS389.install_pkgs
-      # Collect setup parameters into an INI file and feed it into 389 setup script
-      ok = DS389.exec_setup(DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_dn, dm_pass))
-      DS389.remove_setup_ini
-      if !ok
-        Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
-      end
+    # Collect setup parameters into an INI file and feed it into 389 setup script
+    ini_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, dm_pass)
+    ini_safe_content = DS389.gen_setup_ini(fqdn, instance_name, suffix, "********")
+    log.info(ini_safe_content)
+    UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute ...')))
+    ok = DS389.exec_setup(ini_content)
+    # Always remove the ini file
+    DS389.remove_setup_ini
+    if !ok
+      Popup.Error(_('Failed to set up new instance! Log output may be found in /var/log/YaST/y2log'))
+      UI.ReplaceWidget(Id(:busy), Empty())
+      return
+    end
+
+    if (tls_ca != '' && tls_p12 != '')
+      UI.ReplaceWidget(Id(:busy), Label(_('Configuring instance TLS ...')))
       # Turn on TLS
       if !DS389.install_tls_in_nss(instance_name, tls_ca, tls_p12)
-        Popup.Error(_('Failed to set up new instance! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
-      end
-      ldap = LDAPClient.new('ldap://'+fqdn, dm_dn, dm_pass)
-      out, ok = ldap.modify(DS389.get_enable_tls_ldif, true)
-      DS389.append_to_log(out)
-      if !ok
-        Popup.Error(_('Failed to enable TLS! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-        raise
-      end
-      if !DS389.restart(instance_name)
-        Popup.Error(_('Failed to restart directory instance, please inspect the journal of dirsrv@%s.service') % [instance_name])
-        raise
+        Popup.Error(_('Failed to set up new instance! Log output may be found in /var/log/YaST/y2log'))
+        UI.ReplaceWidget(Id(:busy), Empty())
+        return
       end
 
-      UI.ReplaceWidget(Id(:busy), Empty())
-      Popup.Message(_('New instance has been set up! Log output may be found in %s') % [DS_SETUP_LOG_PATH])
-      finish_dialog(:next)
-    rescue
-      # Give user an opportunity to correct mistake
-      UI.ReplaceWidget(Id(:busy), Empty())
+      if !DS389.restart(instance_name)
+        Popup.Error(_('Failed to restart directory instance, please inspect the journal of dirsrv@%s.service and /var/log/dirsrv/slapd-%s') % [instance_name, instance_name])
+        UI.ReplaceWidget(Id(:busy), Empty())
+        return
+      end
     end
 
+    UI.ReplaceWidget(Id(:busy), Empty())
+    Popup.Message(_('New instance has been set up! Log output may be found in /var/log/YaST/y2log'))
+    finish_dialog(:next)
+    UI.ReplaceWidget(Id(:busy), Empty())
   end
 end
