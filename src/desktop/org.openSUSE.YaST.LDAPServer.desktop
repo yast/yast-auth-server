@@ -13,6 +13,7 @@ X-SuSE-YaST-Keywords=authentication,directory,ldap
 Icon=yast-ldap-server
 Exec=xdg-su -c "/sbin/yast2 ldap-server"
 
-Name=Create New Directory Server
-GenericName=Create New Directory Server
+Name=YaST New Directory Server
+GenericName=New Directory Server
+Comment=Create a New Directory Server
 StartupNotify=true
