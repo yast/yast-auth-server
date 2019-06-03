@@ -13,6 +13,7 @@ X-SuSE-YaST-Keywords=authentication,kerberos,krb,krb5
 Icon=yast-kerberos-server
 Exec=xdg-su -c "/sbin/yast2 krb-server"
 
-Name=Create New Kerberos Server
-GenericName=Create New Kerberos Server
+Name=YaST New Kerberos Server
+GenericName=New Kerberos Server
+Comment=Create a New Kerberos Server
 StartupNotify=true

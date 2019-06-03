@@ -12,25 +12,28 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via http://bugs.opensuse.org/
+# Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
 Name:           yast2-auth-server
-Group:	        System/YaST
-Summary:	    A tool for creating identity management server instances
-Version:        4.1.0
+Group:          System/YaST
+Summary:        A tool for creating identity management server instances
+Version:        4.2.0
 Release:        0
 License:        GPL-2.0-or-later
-Source0:        %{name}-%{version}.tar.bz2
 Url:            https://github.com/yast/yast-auth-server
-BuildArch:      noarch
+
+Source0:        %{name}-%{version}.tar.bz2
+
 BuildRequires:  yast2
-BuildRequires:  yast2-devtools
+BuildRequires:  yast2-devtools >= 4.2.2
 BuildRequires:  rubygem(yast-rake)
+
 Requires:       net-tools
 Requires:       yast2-ruby-bindings
 Requires:       yast2
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+
+BuildArch:      noarch
 
 %description
 The program assists system administrators to create new directory server and
@@ -38,19 +41,20 @@ Kerberos server instances that help to maintain centralised user identity
 database for a network.
 
 %prep
-%setup -n %{name}-%{version}
+%setup -q
 
 %build
 
 %install
-rake install DESTDIR="%{buildroot}"
+%yast_install
+%yast_metainfo
 
 %files
-%defattr(-,root,root)
 %doc %{yast_docdir}
-%{yast_libdir}/
-%{yast_desktopdir}/
-%{yast_clientdir}/
+%{yast_libdir}
+%{yast_desktopdir}
+%{yast_metainfodir}
+%{yast_clientdir}
 %{yast_icondir}
 %license COPYING
 
