@@ -26,7 +26,7 @@ Url:            https://github.com/yast/yast-auth-server
 Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  yast2
-BuildRequires:  yast2-devtools
+BuildRequires:  yast2-devtools >= 4.2.2
 BuildRequires:  rubygem(yast-rake)
 
 Requires:       net-tools
