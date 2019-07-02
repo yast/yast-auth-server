@@ -14,6 +14,8 @@ require 'open3'
 
 # LDAPClient serves utility functions for using LDAP command line client to interact with 389 directory server.
 class LDAPClient
+  include Yast::Logger
+
   # Initialise a client with specified connectivity details.
   def initialize(url, bind_dn, bind_pw)
     @url = url
@@ -23,6 +25,7 @@ class LDAPClient
 
   # modify invokes ldapmodify and returns tuple of command output and boolean (success or not).
   def modify(ldif_input, ignore_existing)
+    log.info('modify: %s' % ldif_input)
     stdin, stdouterr, result = Open3.popen2e('/usr/bin/ldapmodify', '-H', @url, '-x', '-D', @bind_dn, '-w', @bind_pw)
     stdin.puts(ldif_input)
     stdin.close
@@ -32,6 +35,7 @@ class LDAPClient
 
   # add invokes ldapadd and returns tuple of command output and boolean (success or not).
   def add(ldif_input, ignore_existing)
+    log.info('add: %s' % ldif_input)
     stdin, stdouterr, result = Open3.popen2e('/usr/bin/ldapadd', '-H', @url, '-x', '-D', @bind_dn, '-w', @bind_pw)
     stdin.puts(ldif_input)
     stdin.close
@@ -49,10 +53,17 @@ objectClass: top
 sn: #{cnsn}", true)
   end
 
+  def create_container(container_dn)
+    return self.add("dn: #{container_dn}
+objectClass: top
+objectClass: nsContainer", true)
+  end
+
   # change_password changes user password for a directory object.
   # Most directory servers require LDAPS or StartTLS for this operation.
   # Returns tuple of command output and boolean (success or not).
   def change_password(dn, new_pass)
+    log.info('change password: %s' % dn)
     stdin, stdouterr, result = Open3.popen2e('/usr/bin/ldappasswd', '-H', @url, '-x', '-D', @bind_dn, '-w', @bind_pw, '-s', new_pass, dn)
     stdin.close
     return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]
