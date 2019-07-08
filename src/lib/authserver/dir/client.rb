@@ -25,7 +25,7 @@ class LDAPClient
 
   # modify invokes ldapmodify and returns tuple of command output and boolean (success or not).
   def modify(ldif_input, ignore_existing)
-    log.info('modify: %s' % ldif_input)
+    log.info('modify: #{ldif_input}')
     stdin, stdouterr, result = Open3.popen2e('/usr/bin/ldapmodify', '-H', @url, '-x', '-D', @bind_dn, '-w', @bind_pw)
     stdin.puts(ldif_input)
     stdin.close
@@ -51,12 +51,6 @@ class LDAPClient
 objectClass: person
 objectClass: top
 sn: #{cnsn}", true)
-  end
-
-  def create_container(container_dn)
-    return self.add("dn: #{container_dn}
-objectClass: top
-objectClass: nsContainer", true)
   end
 
   # change_password changes user password for a directory object.
