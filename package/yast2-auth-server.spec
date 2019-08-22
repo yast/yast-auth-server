@@ -18,7 +18,7 @@
 Name:           yast2-auth-server
 Group:          System/YaST
 Summary:        A tool for creating identity management server instances
-Version:        4.2.2
+Version:        4.2.3
 Release:        0
 License:        GPL-2.0-or-later
 Url:            https://github.com/yast/yast-auth-server
@@ -27,7 +27,7 @@ Source0:        %{name}-%{version}.tar.bz2
 
 BuildRequires:  yast2
 BuildRequires:  yast2-devtools >= 4.2.2
-BuildRequires:  rubygem(yast-rake)
+BuildRequires:  rubygem(%{rb_default_ruby_abi}:yast-rake)
 BuildRequires:  update-desktop-files
 
 Requires:       net-tools
