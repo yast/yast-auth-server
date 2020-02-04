@@ -13,18 +13,16 @@
 require 'yast'
 require 'open3'
 
-# KDC_SETUP_LOG_PATH is the path to progress and debug log file for setting up a new KDC.
-KDC_SETUP_LOG_PATH = '/root/yast2-auth-server-kdc-setup.log'
-
 # MITKerberos serves utility functions for setting up a new directory connected KDC.
 class MITKerberos
   include Yast
+  include Yast::Logger
 
   # install_pkgs installs software packages mandatory for setting up MIT Kerberos server.
   def self.install_pkgs
     Yast.import 'Package'
     # DoInstall never fails
-    Package.DoInstall(['krb5-client', 'krb5-server'].delete_if{|name| Package.Installed(name)})
+    Package.DoInstall(['krb5-client', 'krb5-server', 'krb5-plugin-kdb-ldap'].delete_if{|name| Package.Installed(name)})
   end
 
   # is_configured returns true only if there kerberos configuration has been altered.
@@ -110,7 +108,7 @@ class MITKerberos
   # init_dir uses kerberos LDAP utility to prepare a directory server for kerberos operation.
   # Returns tuple of command output and boolean (success or not).
   def self.init_dir(ldaps_addr, dir_admin_dn, dir_admin_pass, realm_name, container_dn, master_pass)
-    puts ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass].join(' ')
+    log.info( ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', '********', 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', '********'].join(' '))
     stdin, stdouterr, result = Open3.popen2e('/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass)
     stdin.close
     return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]
@@ -130,9 +128,6 @@ class MITKerberos
 
   # append_to_log appends current time and content into log file placed under /root/.
   def self.append_to_log(content)
-    open(KDC_SETUP_LOG_PATH, 'a') {|fh|
-      fh.puts(Time.now)
-      fh.puts(content)
-    }
+    log.info(content)
   end
 end
