@@ -129,7 +129,7 @@ You may set one up using "New Directory Instance" program.'))
       Popup.Error(_('Two master password entries do not match.'))
       return
     end
-    if MITKerberos.is_configured
+    if MITKerberos.is_configured()
       if !Popup.YesNo(_('You appear to have altered Kerberos configuration.
 Continue to use this software will completely overwrite your configuration.
 Do you still wish to continue?'))
@@ -139,7 +139,7 @@ Do you still wish to continue?'))
 
     UI.ReplaceWidget(Id(:busy), Label(_('Installing new instance, this may take a minute or two.')))
 
-    MITKerberos.install_pkgs
+    MITKerberos.install_pkgs()
     # Enable kerberos schema on 389
     # By default 389-ds ships with this schema enabled today.
 
