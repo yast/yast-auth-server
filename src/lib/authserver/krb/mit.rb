@@ -18,6 +18,12 @@ class MITKerberos
   include Yast
   include Yast::Logger
 
+  # @see .kdb5_ldap_util_path
+  OLD_KDB5_LDAP_UTIL = "/usr/lib/mit/sbin/kdb5_ldap_util".freeze
+  KDB5_LDAP_UTIL = "/usr/sbin/kdb5_ldap_util".freeze
+
+  private_constant :OLD_KDB5_LDAP_UTIL, :KDB5_LDAP_UTIL
+
   # install_pkgs installs software packages mandatory for setting up MIT Kerberos server.
   def self.install_pkgs
     Yast.import 'Package'
@@ -92,7 +98,8 @@ class MITKerberos
   # save_password_into_file saves a password into a password stash file for KDC to consume.
   # Returns tuple of command output and boolean (success or not).
   def self.save_password_into_file(dn, pass, file_path)
-    stdin, stdouterr, result = Open3.popen2e('/usr/lib/mit/sbin/kdb5_ldap_util', 'stashsrvpw', '-f', file_path, '-w', pass, dn)
+    stdin, stdouterr, result = kdb5_ldap_util('stashsrvpw', '-f', file_path, '-w', pass, dn)
+
     # The utility asks for password input and repeat to verify
     stdin.puts(pass)
     stdin.puts(pass)
@@ -108,9 +115,13 @@ class MITKerberos
   # init_dir uses kerberos LDAP utility to prepare a directory server for kerberos operation.
   # Returns tuple of command output and boolean (success or not).
   def self.init_dir(ldaps_addr, dir_admin_dn, dir_admin_pass, realm_name, container_dn, master_pass)
-    log.info( ['/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', '********', 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', '********'].join(' '))
-    stdin, stdouterr, result = Open3.popen2e('/usr/lib/mit/sbin/kdb5_ldap_util', '-H', 'ldaps://'+ldaps_addr, '-D', dir_admin_dn, '-w', dir_admin_pass, 'create', '-r', realm_name, '-subtrees', container_dn, '-s', '-P', master_pass)
+    log_args = init_dir_args(ldaps_addr, dir_admin_dn, "********", realm_name, container_dn, "********")
+    log.info(kdb5_ldap_util_path + " " + log_args.join(" "))
+
+    args = init_dir_args(ldaps_addr, dir_admin_dn, dir_admin_pass, realm_name, container_dn, master_pass)
+    stdin, stdouterr, result = kdb5_ldap_util(*args)
     stdin.close
+
     return [stdouterr.readlines.join('\n'), result.value.exitstatus == 0]
   end
 
@@ -129,5 +140,48 @@ class MITKerberos
   # append_to_log appends current time and content into log file placed under /root/.
   def self.append_to_log(content)
     log.info(content)
+  end
+
+  private
+
+  # Runs kdb5_ldap_util with the given arguments
+  #
+  # @params args [Array<String>] list of arguments passed to kdb5_ldap_util binary
+  # @return [Array(IO, IO, Process::Waiter)] i.e., [stdin, stdouterr, result]
+  def self.kdb5_ldap_util(*args)
+    Open3.popen2e(kdb5_ldap_util_path, *args)
+  end
+
+  # Path to the kdb5_ldap_util binary
+  #
+  # Note that the lastest kbr5 package provides the kdb5_ldap_util binary at /usr/sbin, but older kbr5
+  # uses the /usr/lib/mit/sbin path. This method checks which one is available in the system.
+  #
+  # @return [String]
+  def self.kdb5_ldap_util_path
+    File.exist?(KDB5_LDAP_UTIL) ? KDB5_LDAP_UTIL : OLD_KDB5_LDAP_UTIL
+  end
+
+  # Arguments to use when initializing a dir
+  #
+  # @see .init_dir
+  #
+  # @param ldaps_addr [String]
+  # @param dir_admin_dn [String]
+  # @param dir_admin_pass [String]
+  # @param realm_name [String]
+  # @param container_dn [String]
+  # @param master_pass [String]
+  #
+  # @return [Array<String>] list of arguments
+  def self.init_dir_args(ldaps_addr, dir_admin_dn, dir_admin_pass, realm_name, container_dn, master_pass)
+    [
+      '-H', 'ldaps://'+ldaps_addr,
+      '-D', dir_admin_dn,
+      '-w', dir_admin_pass,
+      'create', '-r', realm_name,
+      '-subtrees', container_dn,
+      '-s', '-P', master_pass
+    ]
   end
 end
