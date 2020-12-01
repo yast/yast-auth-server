@@ -1,5 +1,10 @@
-[![Travis Build](https://travis-ci.org/yast/yast-auth-server.svg?branch=master)](https://travis-ci.org/yast/yast-auth-server)
 # yast2-auth-server
+
+[![Workflow Status](https://github.com/yast/yast-auth-server/workflows/CI/badge.svg?branch=master)](
+https://github.com/yast/yast-auth-server/actions?query=branch%3Amaster)
+[![Jenkins Status](https://ci.opensuse.org/buildStatus/icon?job=yast-yast-auth-server-master)](
+https://ci.opensuse.org/view/Yast/job/yast-yast-auth-server-master/)
+
 The program assists system administrators to create new directory server and
 Kerberos server instances that help to maintain centralised user identity
 database for a network.
