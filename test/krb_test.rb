@@ -11,10 +11,8 @@
 
 # Authors:      Howard Guo <hguo@suse.com>
 
-ENV['Y2DIR'] = File.expand_path('../../src', __FILE__)
+require_relative "test_helper.rb"
 
-require 'yast'
-require 'yast/rspec'
 require 'pp'
 require 'authserver/krb/mit'
 
