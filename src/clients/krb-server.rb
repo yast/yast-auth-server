@@ -11,4 +11,9 @@
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'authserver/ui/new_krb_inst'
-NewKrbInst.new.run
+require 'authserver/cli/auth-cli'
+if Yast::WFM.Args.empty?
+  NewKrbInst.new.run
+else
+  AuthServer::CLI.run("krb-server")
+end

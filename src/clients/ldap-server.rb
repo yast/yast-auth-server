@@ -11,4 +11,9 @@
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'authserver/ui/new_dir_inst'
-NewDirInst.new.run
+require 'authserver/cli/auth-cli'
+if Yast::WFM.Args.empty?
+  NewDirInst.new.run
+else
+  AuthServer::CLI.run("ldap-server")
+end
