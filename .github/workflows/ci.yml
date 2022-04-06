@@ -11,11 +11,9 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        distro:  [ "tumbleweed", "leap_latest" ]
 
     container:
-      image: registry.opensuse.org/yast/head/containers_${{matrix.distro}}/yast-ruby
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -43,7 +41,7 @@ jobs:
   # FIXME: Rubocop is not used
   # Rubocop:
   #   runs-on: ubuntu-latest
-  #   container: registry.opensuse.org/yast/head/containers/yast-ruby:latest
+  #   container: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby:latest
 
   #   steps:
 
@@ -58,11 +56,9 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        distro:  [ "tumbleweed", "leap_latest" ]
 
     container:
-      image: registry.opensuse.org/yast/head/containers_${{matrix.distro}}/yast-ruby
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -77,11 +73,9 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        distro: [ "leap_latest" ]
 
     container:
-      image: registry.opensuse.org/yast/head/containers_${{matrix.distro}}/yast-ruby
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
@@ -98,11 +92,9 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        distro: [ "leap_latest" ]
 
     container:
-      image: registry.opensuse.org/yast/head/containers_${{matrix.distro}}/yast-ruby
+      image: registry.opensuse.org/yast/sle-15/sp4/containers/yast-ruby
 
     steps:
 
