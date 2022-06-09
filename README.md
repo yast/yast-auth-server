@@ -11,8 +11,6 @@ database for a network.
 
 The features are:
   * Create new directory server instance.
-  * Create new Kerberos server instance.
-  * Integrate Kerberos server with directory server.
 
 ## Install
 To install the latest stable version on openSUSE or SLE, use zypper:
@@ -22,7 +20,7 @@ $ sudo zypper install yast2-auth-server
 ```
 
 # Run
-Visit Yast control panel and launch "Create New Kerberos Server" or "Create New Directory Server".
+Visit Yast control panel and launch "Create New Directory Server".
 
 
 # Development
