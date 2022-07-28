@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Wed Jul 27 00:50:39 UTC 2022 - William Brown <william.brown@suse.com>
 
-- Version 4.6.0
+- Version 4.5.1
 - Remove kerberos ldap database support
 
 -------------------------------------------------------------------
