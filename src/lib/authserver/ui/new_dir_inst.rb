@@ -124,7 +124,7 @@ class NewDirInst < UI::Dialog
     # Always remove the ini file
     DS389.remove_setup_ini
     if !ok
-      Popup.Error(_('Failed to set up new instance! Log output may be found in %{y2log}'), y2log: y2log)
+      Popup.Error(format(_('Failed to set up new instance! Log output may be found in %{y2log}'), y2log: y2log))
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -133,7 +133,7 @@ class NewDirInst < UI::Dialog
       UI.ReplaceWidget(Id(:busy), Label(_('Configuring instance TLS ...')))
       # Turn on TLS
       if !DS389.install_tls_in_nss(instance_name, tls_ca, tls_p12)
-        Popup.Error(_('Failed to set up new instance! Log output may be found in %{y2log}'), y2log: y2log)
+        Popup.Error(format(_('Failed to set up new instance! Log output may be found in %{y2log}'), y2log: y2log))
         UI.ReplaceWidget(Id(:busy), Empty())
         return
       end
@@ -146,7 +146,7 @@ class NewDirInst < UI::Dialog
     end
 
     UI.ReplaceWidget(Id(:busy), Empty())
-    Popup.Message(_('New instance has been set up! Log output may be found in %{y2log}'), y2log: y2log)
+    Popup.Message(format(_('New instance has been set up! Log output may be found in %{y2log}'), y2log: y2log))
     finish_dialog(:next)
     UI.ReplaceWidget(Id(:busy), Empty())
   end
