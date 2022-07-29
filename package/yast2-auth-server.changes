@@ -1,8 +1,8 @@
 -------------------------------------------------------------------
 Wed Jul 27 00:50:39 UTC 2022 - William Brown <william.brown@suse.com>
 
-- Version 4.5.1
-- Remove kerberos ldap database support
+- Remove kerberos ldap database support (gh#yast/yast-auth-server#73)
+- 4.5.1
 
 -------------------------------------------------------------------
 Wed Apr 06 13:24:58 UTC 2022 - Ladislav Slezák <lslezak@suse.cz>
