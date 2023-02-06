@@ -56,7 +56,7 @@ suffix = #{suffix}
   end
 
   # exec_setup runs setup-ds.pl using input parameters file content.
-  # The output of setup script is written into file .y2log or /var/log/YaST/y2log
+  # The output of setup script is written into file .y2log or /var/log/YaST2/y2log
   # Returns true only if setup was successful.
   def self.exec_setup(content)
     append_to_log('Beginning YAST auth server installation ...')
