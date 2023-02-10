@@ -153,28 +153,52 @@ Do you still wish to continue?'))
     out, ok = ldap.create_person(kdc_dn_prefix, 'Kerberos KDC Connection', dir_suffix)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create Kerberos KDC connection user! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create Kerberos KDC connection user! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
     out, ok = ldap.change_password(kdc_dn,kdc_pass)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create Kerberos KDC connection user! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create Kerberos KDC connection user! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
     out, ok = ldap.create_person(admin_dn_prefix, 'Kerberos Administration Connection', dir_suffix)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create Kerberos administration user! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create Kerberos administration user! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
     out, ok = ldap.change_password(admin_dn,admin_pass)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create Kerberos KDC administration user! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create Kerberos KDC administration user! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -198,14 +222,26 @@ Do you still wish to continue?'))
     out, ok = MITKerberos.save_password_into_file(kdc_dn, kdc_pass, pass_file_path)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create password file! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create password file! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
     out, ok = MITKerberos.save_password_into_file(admin_dn, admin_pass, pass_file_path)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to create password file! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to create password file! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -214,7 +250,13 @@ Do you still wish to continue?'))
     out, ok = MITKerberos.init_dir(dir_addr, dm_dn, dm_pass, realm, container_dn, master_pass)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Kerberos initialisation failure! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Kerberos initialisation failure! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -223,14 +265,26 @@ Do you still wish to continue?'))
     out, ok = ldap.aci_allow_modify(container_dn, 'kerberos-admin', admin_dn)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to modify directory permission! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to modify directory permission! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
     out, ok = ldap.aci_allow_modify(container_dn, 'kerberos-kdc', kdc_dn)
     MITKerberos.append_to_log('%s' % out)
     if !ok
-      Popup.Error(_('Failed to modify directory permission! Log output may be found in /var/log/YaST/y2log'))
+      Popup.Error(
+        # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+        format(
+          _('Failed to modify directory permission! Log output may be found in %{y2log_path}/y2log'),
+          y2log_path: Yast::Directory.logdir
+        )
+      )
       UI.ReplaceWidget(Id(:busy), Empty())
       return
     end
@@ -248,7 +302,13 @@ Do you still wish to continue?'))
     end
 
     UI.ReplaceWidget(Id(:busy), Empty())
-    Popup.Message(_('New instance has been set up! Log output may be found in /var/log/YaST/y2log'))
+    Popup.Message(
+      # TRANSLATORS: %{y2log_path} is replaced by the YaST2 logs path.
+      format(
+        _('New instance has been set up! Log output may be found in %{y2log_path}/y2log'),
+        y2log_path: Yast::Directory.logdir
+      )
+    )
     finish_dialog(:next)
     UI.ReplaceWidget(Id(:busy), Empty())
   end
