@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb  6 10:58:59 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix y2log path in popup messages (bsc#1207831)
+- 4.3.0
+
+-------------------------------------------------------------------
 Mon Jul 13 11:39:36 UTC 2020 - José Iván López González <jlopez@suse.com>
 
 - Use available kdb5_ldap_util binary (either at /usr/lib/mit/sbin
