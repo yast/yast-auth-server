@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb  6 10:58:59 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix y2log path in popup messages (bsc#1207831)
+- 4.2.4
+
+-------------------------------------------------------------------
 Thu Aug 22 16:16:07 CEST 2019 - schubi@suse.de
 
 - Using rb_default_ruby_abi tag in the spec file in order to
