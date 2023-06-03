@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Mon Apr 24 21:29:00 UTC 2023 - William Brown <william.brown@suse.com>
 
-- Add deprecation notice to this tool
+- Add deprecation notice to this tool (bsc#1211734).
 - 4.6.2
 
 -------------------------------------------------------------------
