@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Sep 01 19:57:03 UTC 2023 - Josef Reidinger <jreidinger@suse.com>
+
+- Branch package for SP6 (bsc#1208913)
+
+-------------------------------------------------------------------
 Wed Jul 27 00:50:39 UTC 2022 - William Brown <william.brown@suse.com>
 
 - Remove kerberos ldap database support (gh#yast/yast-auth-server#73)
