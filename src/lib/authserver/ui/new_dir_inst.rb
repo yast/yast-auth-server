@@ -102,7 +102,7 @@ class NewDirInst < UI::Dialog
       Popup.Error(_('Both TLS Certificate authority and PKCS12 must be provided, or none provided.'))
       return
     end
-    if (tls_ca != '' && tls_p12 != '') && (!File.exists?(tls_ca) || !File.exists?(tls_p12))
+    if (tls_ca != '' && tls_p12 != '') && (!File.exist?(tls_ca) || !File.exist?(tls_p12))
       Popup.Error(_('TLS certificate authority PEM OR certificate/key PKCS12 file does not exist.'))
       return
     end

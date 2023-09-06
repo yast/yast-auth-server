@@ -11,8 +11,10 @@
 # Authors:      Howard Guo <hguo@suse.com>
 
 require 'authserver/ui/new_dir_inst'
+require 'authserver/ui/deprecation'
 require 'authserver/cli/auth-cli'
 if Yast::WFM.Args.empty?
+  Deprecation.new.run
   NewDirInst.new.run
 else
   AuthServer::CLI.run("ldap-server")
