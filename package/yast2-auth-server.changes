@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Oct 30 11:51:52 UTC 2023 - Samuel Cabrero <scabrero@suse.de>
+
+- Fix y2log path in popup messages (bsc#1207831)
+- 4.4.1
+
+-------------------------------------------------------------------
 Tue Apr 20 13:51:55 UTC 2021 - Ladislav Slezák <lslezak@suse.cz>
 
 - 4.4.0 (bsc#1185510)
