@@ -240,7 +240,6 @@ Wed Feb 12 10:13:07 UTC 2014 - ckornacker@suse.com
 - replace deprecated Service calls
 
 -------------------------------------------------------------------
-
 Fri Jan 31 23:44:25 UTC 2014 - varkoly@suse.com
 
 - Fix the requirement yast2-ldap-client -> yast2-ldap 
